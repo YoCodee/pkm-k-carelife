@@ -10,7 +10,9 @@ export default function DummyQRPage() {
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   useEffect(() => {
-    setBaseUrl(window.location.origin);
+    // Prioritaskan URL Vercel/Produksi agar saat diunduh selalu mengarah ke web asli
+    const targetUrl = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin || "https://pkm-k-carelife.vercel.app";
+    setBaseUrl(targetUrl);
   }, []);
 
   const handleCopy = async (url: string, id: string) => {
