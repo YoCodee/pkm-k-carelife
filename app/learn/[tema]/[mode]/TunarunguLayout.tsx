@@ -16,7 +16,7 @@ interface Props {
   mode: Mode;
 }
 
-export default function TunarunguLayout({ lesson, tema }: Props) {
+export default function TunarunguLayout({ lesson, tema, mode }: Props) {
   const [currentStep, setCurrentStep] = useState(0);
   const [isFinished, setIsFinished] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -72,7 +72,7 @@ export default function TunarunguLayout({ lesson, tema }: Props) {
         <header className="px-6 pt-8 pb-4">
           <div className="max-w-[700px] mx-auto">
             <Link
-              href="/learn"
+              href={`/learn?mode=${mode}`}
               className="inline-flex items-center gap-2 text-sm font-black text-[#1A1A1A] px-4 py-2 rounded-full border-2 border-[#1A1A1A] bg-white shadow-[2px_2px_0_#1A1A1A] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0_#1A1A1A] transition-all mb-4"
             >
               <ArrowLeft size={18} strokeWidth={3} />
@@ -107,7 +107,7 @@ export default function TunarunguLayout({ lesson, tema }: Props) {
                 🔄 Ulangi dari Awal
               </motion.button>
               <Link
-                href="/learn"
+                href={`/learn?mode=${mode}`}
                 className="block w-full py-4 bg-[#66B2B2] text-white rounded-[20px] font-black text-base text-center border-2 border-[#1A1A1A] shadow-[4px_4px_0_#1A1A1A] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_#1A1A1A] transition-all"
               >
                 📚 Pilih Tema Lain
@@ -124,7 +124,7 @@ export default function TunarunguLayout({ lesson, tema }: Props) {
       <header className="px-6 pt-8 pb-4">
         <div className="max-w-[700px] mx-auto">
           <Link
-            href="/learn"
+            href={`/learn?mode=${mode}`}
             className="inline-flex items-center gap-2 text-sm font-black text-[#1A1A1A] px-4 py-2 rounded-full border-2 border-[#1A1A1A] bg-white shadow-[2px_2px_0_#1A1A1A] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0_#1A1A1A] transition-all mb-4"
           >
             <ArrowLeft size={18} strokeWidth={3} />

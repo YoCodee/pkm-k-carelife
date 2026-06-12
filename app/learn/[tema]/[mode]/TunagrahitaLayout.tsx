@@ -24,7 +24,7 @@ interface Props {
   mode: Mode;
 }
 
-export default function TunagrahitaLayout({ lesson, tema }: Props) {
+export default function TunagrahitaLayout({ lesson, tema, mode }: Props) {
   const [currentStep, setCurrentStep] = useState(0);
   const [stars, setStars] = useState(0);
   const [videoSpeed, setVideoSpeed] = useState(0.75);
@@ -118,7 +118,7 @@ export default function TunagrahitaLayout({ lesson, tema }: Props) {
         <header className="px-6 pt-8 pb-4">
           <div className="max-w-[600px] mx-auto">
             <Link
-              href="/learn"
+              href={`/learn?mode=${mode}`}
               className="inline-flex items-center gap-2 text-sm font-black text-[#1A1A1A] px-4 py-2 rounded-full border-2 border-[#1A1A1A] bg-white shadow-[2px_2px_0_#1A1A1A] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0_#1A1A1A] transition-all mb-4"
             >
               <ArrowLeft size={18} strokeWidth={3} />
@@ -181,7 +181,7 @@ export default function TunagrahitaLayout({ lesson, tema }: Props) {
       <header className="px-6 pt-8 pb-4">
         <div className="max-w-[600px] mx-auto">
           <Link
-            href="/learn"
+            href={`/learn?mode=${mode}`}
             className="inline-flex items-center gap-2 text-sm font-black text-[#1A1A1A] px-4 py-2 rounded-full border-2 border-[#1A1A1A] bg-white shadow-[2px_2px_0_#1A1A1A] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0_#1A1A1A] transition-all mb-4"
           >
             <ArrowLeft size={18} strokeWidth={3} />
