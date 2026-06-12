@@ -1,26 +1,241 @@
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@500;700;800;900&display=swap');
+@import url('https://fonts.cdnfonts.com/css/open-dyslexic');
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+  --background: #F8F9FA;
+  --foreground: #1A1A1A;
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  /* CareLife kid-friendly palette */
+  --cl-bg: #F8F9FA;
+  --cl-surface: #FFFFFF;
+  --cl-text: #1A1A1A;
+  --cl-text-muted: #6B7280;
+  --cl-teal: #66B2B2;
+  --cl-pink: #FFB6B6;
+  --cl-yellow: #FFD700;
+  --cl-mint: #A8E6CF;
+  --cl-coral: #FF9A6C;
+  --cl-border: #1A1A1A;
+  --cl-radius-sm: 16px;
+  --cl-radius-md: 24px;
+  --cl-radius-lg: 32px;
+  --cl-border-width: 2px;
+  --cl-shadow: 4px 4px 0px var(--cl-border);
+  --cl-shadow-sm: 2px 2px 0px var(--cl-border);
 }
 
 body {
-  background: var(--background);
+  background: var(--cl-bg);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: 'Nunito', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+/* ============================================
+   CARELIFE DESIGN SYSTEM — Soft Neobrutalism
+   ============================================ */
+
+.cl-card {
+  background: var(--cl-surface);
+  border: var(--cl-border-width) solid var(--cl-border);
+  border-radius: var(--cl-radius-md);
+  box-shadow: var(--cl-shadow);
+}
+
+.cl-btn-primary {
+  background: var(--cl-teal);
+  color: white;
+  border: var(--cl-border-width) solid var(--cl-border);
+  border-radius: var(--cl-radius-sm);
+  box-shadow: var(--cl-shadow);
+  font-weight: 800;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.cl-btn-primary:hover {
+  transform: translate(2px, 2px);
+  box-shadow: var(--cl-shadow-sm);
+}
+
+.cl-btn-cta {
+  background: var(--cl-yellow);
+  color: var(--cl-border);
+  border: var(--cl-border-width) solid var(--cl-border);
+  border-radius: var(--cl-radius-md);
+  box-shadow: var(--cl-shadow);
+  font-weight: 800;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.cl-btn-cta:hover {
+  transform: translate(2px, 2px);
+  box-shadow: var(--cl-shadow-sm);
+}
+
+.cl-btn-secondary {
+  background: var(--cl-surface);
+  color: var(--cl-border);
+  border: var(--cl-border-width) solid var(--cl-border);
+  border-radius: var(--cl-radius-sm);
+  box-shadow: var(--cl-shadow);
+  font-weight: 800;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.cl-btn-secondary:hover {
+  transform: translate(2px, 2px);
+  box-shadow: var(--cl-shadow-sm);
+}
+
+.cl-tag {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 999px;
+  border: var(--cl-border-width) solid var(--cl-border);
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.cl-tag-pink { background: var(--cl-pink); color: var(--cl-border); }
+.cl-tag-mint { background: var(--cl-mint); color: var(--cl-border); }
+.cl-tag-yellow { background: var(--cl-yellow); color: var(--cl-border); }
+.cl-tag-teal { background: var(--cl-teal); color: white; }
+
+/* Decorative pastel blobs */
+.cl-blob {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  filter: blur(40px);
+  opacity: 0.45;
+}
+
+/* ============================================
+   RESPONSIVE DESKTOP ENHANCEMENTS
+   ============================================ */
+
+@media (min-width: 768px) {
+  body {
+    background: var(--cl-bg);
+  }
+}
+
+@keyframes scan-laser {
+  0% { transform: translateY(0px); opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { transform: translateY(276px); opacity: 0; }
+}
+
+.animate-scan-laser {
+  animation: scan-laser 2s infinite linear;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-8px); }
+  40% { transform: translateX(8px); }
+  60% { transform: translateX(-6px); }
+  80% { transform: translateX(6px); }
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.border-3 {
+  border-width: 3px;
+}
+
+/* ============================================
+   ACCESSIBILITY SYSTEMS — PKM SPECIAL FEATURES
+   ============================================ */
+
+/* 1. Dyslexia-friendly Font Override */
+.dyslexic-font,
+.dyslexic-font * {
+  font-family: 'OpenDyslexic', 'Nunito', -apple-system, sans-serif !important;
+  letter-spacing: 0.03em !important;
+  word-spacing: 0.08em !important;
+}
+
+/* 2. High Contrast Theme (Black & Yellow) */
+.high-contrast {
+  background-color: #000000 !important;
+  color: #FFFF00 !important;
+  border-color: #FFFF00 !important;
+}
+
+.high-contrast * {
+  background-color: #000000 !important;
+  color: #FFFF00 !important;
+  border-color: #FFFF00 !important;
+  box-shadow: none !important;
+  background-image: none !important;
+}
+
+/* Icons, active elements and badges override in high contrast */
+.high-contrast a,
+.high-contrast button,
+.high-contrast .cl-card {
+  border: 2px solid #FFFF00 !important;
+  background-color: #000000 !important;
+  color: #FFFF00 !important;
+}
+
+.high-contrast a:hover,
+.high-contrast button:hover {
+  background-color: #FFFF00 !important;
+  color: #000000 !important;
+}
+
+.high-contrast svg,
+.high-contrast svg * {
+  stroke: #FFFF00 !important;
+}
+
+/* 3. Text Sizing Rules */
+.text-size-lg p,
+.text-size-lg span,
+.text-size-lg li,
+.text-size-lg button,
+.text-size-lg a,
+.text-size-lg input {
+  font-size: 1.15rem !important;
+}
+.text-size-lg h1 {
+  font-size: 2.5rem !important;
+}
+.text-size-lg h2 {
+  font-size: 2rem !important;
+}
+.text-size-lg h3 {
+  font-size: 1.5rem !important;
+}
+
+.text-size-xl p,
+.text-size-xl span,
+.text-size-xl li,
+.text-size-xl button,
+.text-size-xl a,
+.text-size-xl input {
+  font-size: 1.35rem !important;
+  line-height: 1.6 !important;
+}
+.text-size-xl h1 {
+  font-size: 2.8rem !important;
+}
+.text-size-xl h2 {
+  font-size: 2.25rem !important;
+}
+.text-size-xl h3 {
+  font-size: 1.75rem !important;
 }
