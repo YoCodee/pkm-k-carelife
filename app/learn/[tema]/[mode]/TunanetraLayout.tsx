@@ -29,6 +29,8 @@ export default function TunanetraLayout({ lesson, tema, mode }: Props) {
   const [isFinished, setIsFinished] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [gestureHint, setGestureHint] = useState("");
+  const [isAudioUnlocked, setIsAudioUnlocked] = useState(false);
+  const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
 
   const totalSteps = lesson.steps.length;
   const step = currentStep >= 0 && currentStep < totalSteps ? lesson.steps[currentStep] : null;
@@ -45,6 +47,7 @@ export default function TunanetraLayout({ lesson, tema, mode }: Props) {
     speechSynthesis.cancel();
 
     const utterance = new SpeechSynthesisUtterance(text);
+    utteranceRef.current = utterance; // Simpan di ref agar tidak di-garbage collect HP
     utterance.lang = "id-ID";
 
     // Cari daftar suara Bahasa Indonesia yang tersedia di browser/perangkat
@@ -74,6 +77,7 @@ export default function TunanetraLayout({ lesson, tema, mode }: Props) {
     utterance.onstart = () => setIsSpeaking(true);
     utterance.onend = () => {
       setIsSpeaking(false);
+      utteranceRef.current = null;
       onDone?.();
     };
 
@@ -83,6 +87,7 @@ export default function TunanetraLayout({ lesson, tema, mode }: Props) {
   const stopSpeaking = useCallback(() => {
     if ("speechSynthesis" in window) {
       speechSynthesis.cancel();
+      utteranceRef.current = null;
       setIsSpeaking(false);
     }
   }, []);
@@ -156,9 +161,11 @@ export default function TunanetraLayout({ lesson, tema, mode }: Props) {
 
     speakTimeoutRef.current = setTimeout(() => {
       if (currentStep === -1 && !isFinished) {
-        // Intro
-        const introText = `Selamat datang di materi ${lesson.title}. ${lesson.description}. Ada ${totalSteps} langkah. Ketuk layar untuk mulai. Geser ke kiri untuk kembali. Ketuk dua kali untuk mengulang.`;
-        speak(introText);
+        // Hanya putar intro jika audio sudah aktif (di HP, intro akan berbunyi di ketukan pertama)
+        if (isAudioUnlocked) {
+          const introText = `Selamat datang di materi ${lesson.title}. ${lesson.description}. Ada ${totalSteps} langkah. Ketuk layar untuk mulai. Geser ke kiri untuk kembali. Ketuk dua kali untuk mengulang.`;
+          speak(introText);
+        }
       } else if (isFinished) {
         const finishText = `Selamat! Kamu sudah selesai belajar ${lesson.title}. Kamu hebat sekali! Ketuk layar untuk kembali ke menu, atau geser kiri untuk mengulang langkah terakhir.`;
         speak(finishText);
@@ -174,7 +181,7 @@ export default function TunanetraLayout({ lesson, tema, mode }: Props) {
       if (tapTimeoutRef.current) clearTimeout(tapTimeoutRef.current);
       stopSpeaking();
     };
-  }, [currentStep, isFinished, lesson.title, lesson.description, totalSteps, step, speak, stopSpeaking]); // added dependencies
+  }, [currentStep, isFinished, lesson.title, lesson.description, totalSteps, step, speak, stopSpeaking, isAudioUnlocked]); // added dependencies
 
   // ── Pointer Gesture Handling ──
   const handlePointerDown = (e: React.PointerEvent) => {
@@ -193,6 +200,21 @@ export default function TunanetraLayout({ lesson, tema, mode }: Props) {
   const handlePointerUp = (e: React.PointerEvent) => {
     if (e.button !== 0) return;
     if ((e.target as HTMLElement).closest("a") || (e.target as HTMLElement).closest("button")) {
+      return;
+    }
+
+    // Aktifkan audio pada ketukan pertama di HP
+    if (!isAudioUnlocked) {
+      setIsAudioUnlocked(true);
+      if ("speechSynthesis" in window) {
+        speechSynthesis.cancel();
+        speechSynthesis.speak(new SpeechSynthesisUtterance(""));
+      }
+      playSFX("click");
+      triggerHaptic("click");
+      
+      const introText = `Selamat datang di materi ${lesson.title}. ${lesson.description}. Ada ${totalSteps} langkah. Ketuk layar untuk mulai. Geser ke kiri untuk kembali. Ketuk dua kali untuk mengulang.`;
+      speak(introText);
       return;
     }
 
@@ -368,7 +390,13 @@ export default function TunanetraLayout({ lesson, tema, mode }: Props) {
                 </p>
               </div>
 
-              <WaveformBars />
+              {!isAudioUnlocked ? (
+                <div className="bg-[#FFD700] border-2 border-[#1A1A1A] rounded-[20px] p-4 text-[#1A1A1A] font-black text-sm animate-pulse cursor-pointer shadow-[2px_2px_0_#1A1A1A]">
+                  🔊 KETUK LAYAR UNTUK MENGAKTIFKAN SUARA
+                </div>
+              ) : (
+                <WaveformBars />
+              )}
 
               <div className="space-y-3 pt-2">
                 <div className="bg-[#F8F9FA] rounded-[20px] px-6 py-3 border-2 border-[#1A1A1A]">

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { Volume2, VolumeX } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -13,12 +13,14 @@ interface AudioNarratorProps {
 
 export default function AudioNarrator({ text, autoPlay = false, onEnd, shouldStop = false }: AudioNarratorProps) {
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
 
   const speak = useCallback((content: string) => {
     if (!("speechSynthesis" in window)) return;
     speechSynthesis.cancel();
 
     const utterance = new SpeechSynthesisUtterance(content);
+    utteranceRef.current = utterance; // Simpan di ref agar tidak di-garbage collect oleh HP
     utterance.lang = "id-ID";
 
     // Cari daftar suara Bahasa Indonesia yang tersedia di browser/perangkat
@@ -47,6 +49,7 @@ export default function AudioNarrator({ text, autoPlay = false, onEnd, shouldSto
     utterance.pitch = 1.1;
     utterance.onend = () => {
       setIsSpeaking(false);
+      utteranceRef.current = null;
       onEnd?.();
     };
 
@@ -57,6 +60,7 @@ export default function AudioNarrator({ text, autoPlay = false, onEnd, shouldSto
   const stop = useCallback(() => {
     if ("speechSynthesis" in window) {
       speechSynthesis.cancel();
+      utteranceRef.current = null;
       setIsSpeaking(false);
     }
   }, []);
@@ -70,7 +74,8 @@ export default function AudioNarrator({ text, autoPlay = false, onEnd, shouldSto
 
   useEffect(() => {
     if (autoPlay && text && !shouldStop) {
-      const timeout = setTimeout(() => speak(text), 600);
+      // Perkecil jeda waktu menjadi 100ms agar dideteksi sebagai bagian dari klik user di HP
+      const timeout = setTimeout(() => speak(text), 100);
       return () => {
         clearTimeout(timeout);
         stop();
