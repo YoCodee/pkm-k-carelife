@@ -6,14 +6,21 @@ import { Play, Pause, RotateCcw, X } from "lucide-react";
 
 interface JBIOverlayProps {
   caption?: string;
+  jbiVideoUrl?: string;
+  primaryVideoRef?: React.RefObject<HTMLVideoElement | null>;
 }
 
 interface FingerConfig {
-  angle: number;  // Angle in degrees (0 is right, -90 is straight up, -180 is left)
+  angle: number; // Angle in degrees (0 is right, -90 is straight up, -180 is left)
   length: number; // Length in pixels
 }
 
-const getFingerCoords = (baseX: number, baseY: number, angleDegrees: number, length: number) => {
+const getFingerCoords = (
+  baseX: number,
+  baseY: number,
+  angleDegrees: number,
+  length: number,
+) => {
   const angleRad = (angleDegrees * Math.PI) / 180;
   return {
     x2: baseX + Math.cos(angleRad) * length,
@@ -21,214 +28,159 @@ const getFingerCoords = (baseX: number, baseY: number, angleDegrees: number, len
   };
 };
 
+const fold = { angle: 90, length: 14 };
+const foldThumb = { angle: 0, length: 18 };
+
 const letterConfigs: Record<string, FingerConfig[]> = {
-  // A: Fist, thumb on side
   A: [
-    { angle: -120, length: 12 }, // Thumb
-    { angle: -95, length: 6 },   // Index (folded)
-    { angle: -90, length: 6 },   // Middle (folded)
-    { angle: -85, length: 6 },   // Ring (folded)
-    { angle: -80, length: 6 },   // Pinky (folded)
+    { angle: -90, length: 22 }, // Thumb straight up
+    fold, fold, fold, fold
   ],
-  // B: Flat hand, all extended
   B: [
-    { angle: -140, length: 18 }, // Thumb
-    { angle: -95, length: 26 },  // Index
-    { angle: -90, length: 28 },  // Middle
-    { angle: -85, length: 26 },  // Ring
-    { angle: -80, length: 22 },  // Pinky
+    foldThumb,
+    { angle: -90, length: 28 }, // Index
+    { angle: -90, length: 30 }, // Middle
+    { angle: -90, length: 28 }, // Ring
+    { angle: -90, length: 24 }, // Pinky
   ],
-  // C: Curved hand (all curved/semi-folded)
   C: [
-    { angle: -110, length: 15 },
-    { angle: -130, length: 18 },
-    { angle: -120, length: 18 },
-    { angle: -110, length: 18 },
-    { angle: -100, length: 16 },
+    { angle: -135, length: 20 }, // Thumb curved
+    { angle: -135, length: 22 }, // Index curved
+    { angle: -135, length: 22 }, // Middle curved
+    { angle: -135, length: 22 }, // Ring curved
+    { angle: -135, length: 20 }, // Pinky curved
   ],
-  // D: Index straight up, others folded
   D: [
-    { angle: -130, length: 10 },
-    { angle: -95, length: 26 },
-    { angle: -90, length: 6 },
-    { angle: -85, length: 6 },
-    { angle: -80, length: 6 },
+    { angle: -45, length: 15 }, // Thumb UP-RIGHT
+    { angle: -90, length: 28 }, // Index UP
+    { angle: 135, length: 15 }, // Middle touches thumb
+    { angle: 135, length: 15 }, // Ring touches thumb
+    { angle: 135, length: 15 }, // Pinky touches thumb
   ],
-  // E: Fist, fingers folded inward tight
   E: [
-    { angle: -90, length: 8 },
-    { angle: -90, length: 6 },
-    { angle: -90, length: 6 },
-    { angle: -90, length: 6 },
-    { angle: -90, length: 6 },
+    foldThumb,
+    { angle: 120, length: 16 }, // Curled tight
+    { angle: 120, length: 16 },
+    { angle: 120, length: 16 },
+    { angle: 120, length: 16 },
   ],
-  // F: Index and thumb touch, other three extended
   F: [
-    { angle: -105, length: 14 },
-    { angle: -100, length: 10 },
-    { angle: -90, length: 28 },
-    { angle: -85, length: 26 },
-    { angle: -80, length: 22 },
+    { angle: -45, length: 15 }, // Thumb UP-RIGHT
+    { angle: 135, length: 15 }, // Index DOWN-LEFT
+    { angle: -90, length: 30 }, // Middle UP
+    { angle: -90, length: 28 }, // Ring UP
+    { angle: -90, length: 24 }, // Pinky UP
   ],
-  // G: Thumb and Index pointing left (like a pinch)
   G: [
-    { angle: -180, length: 18 }, // Thumb pointing left
-    { angle: -180, length: 20 }, // Index pointing left
-    { angle: -90, length: 6 },
-    { angle: -85, length: 6 },
-    { angle: -80, length: 6 },
+    { angle: -180, length: 24 }, // Thumb LEFT
+    { angle: -180, length: 26 }, // Index LEFT
+    fold, fold, fold
   ],
-  // H: Thumb folded, Index and Middle pointing left
   H: [
-    { angle: -110, length: 8 },
-    { angle: -180, length: 22 },
-    { angle: -180, length: 22 },
-    { angle: -85, length: 6 },
-    { angle: -80, length: 6 },
+    foldThumb,
+    { angle: -180, length: 26 }, // Index LEFT
+    { angle: -180, length: 26 }, // Middle LEFT
+    fold, fold
   ],
-  // I: Pinky pointing up, others folded
   I: [
-    { angle: -110, length: 8 },
-    { angle: -95, length: 6 },
-    { angle: -90, length: 6 },
-    { angle: -85, length: 6 },
-    { angle: -80, length: 22 }, // Pinky extended
+    foldThumb,
+    fold, fold, fold,
+    { angle: -90, length: 24 } // Pinky UP
   ],
-  // J: Pinky extended but curved slightly
   J: [
-    { angle: -110, length: 8 },
-    { angle: -95, length: 6 },
-    { angle: -90, length: 6 },
-    { angle: -85, length: 6 },
-    { angle: -60, length: 22 },
+    foldThumb,
+    fold, fold, fold,
+    { angle: -60, length: 24 } // Pinky curve UP-RIGHT
   ],
-  // K: Index and Middle extended (V-shape), Thumb touching Middle
   K: [
-    { angle: -115, length: 15 }, // Thumb touching middle
-    { angle: -110, length: 26 }, // Index
-    { angle: -75, length: 28 },  // Middle
-    { angle: -85, length: 6 },
-    { angle: -80, length: 6 },
+    { angle: -90, length: 22 }, // Thumb UP
+    { angle: -100, length: 28 }, // Index UP-LEFT
+    { angle: -70, length: 30 }, // Middle UP-RIGHT
+    fold, fold
   ],
-  // L: Thumb pointing left, Index pointing up
   L: [
-    { angle: -180, length: 20 }, // Thumb (L-shape)
-    { angle: -95, length: 26 },  // Index (L-shape)
-    { angle: -90, length: 6 },
-    { angle: -85, length: 6 },
-    { angle: -80, length: 6 },
+    { angle: -180, length: 24 }, // Thumb LEFT
+    { angle: -90, length: 28 }, // Index UP
+    fold, fold, fold
   ],
-  // M: Fist with thumb folded over ring finger
   M: [
-    { angle: -85, length: 12 },
-    { angle: -95, length: 7 },
-    { angle: -90, length: 7 },
-    { angle: -85, length: 7 },
-    { angle: -80, length: 6 },
+    { angle: 0, length: 24 }, // Thumb FAR RIGHT
+    { angle: 90, length: 16 }, // Index OVER thumb
+    { angle: 90, length: 16 }, // Middle OVER thumb
+    { angle: 90, length: 16 }, // Ring OVER thumb
+    fold
   ],
-  // N: Fist with thumb folded over middle finger
   N: [
-    { angle: -95, length: 12 },
-    { angle: -95, length: 7 },
-    { angle: -90, length: 7 },
-    { angle: -85, length: 6 },
-    { angle: -80, length: 6 },
+    { angle: 0, length: 20 }, // Thumb RIGHT
+    { angle: 90, length: 16 }, // Index OVER
+    { angle: 90, length: 16 }, // Middle OVER
+    fold, fold
   ],
-  // O: Form a circle with all fingers
   O: [
-    { angle: -120, length: 14 },
-    { angle: -130, length: 14 },
-    { angle: -120, length: 14 },
-    { angle: -110, length: 14 },
-    { angle: -100, length: 14 },
+    { angle: -60, length: 18 }, // Thumb
+    { angle: 135, length: 18 }, // Index
+    { angle: 135, length: 18 }, // Middle
+    { angle: 135, length: 18 }, // Ring
+    { angle: 135, length: 18 }, // Pinky
   ],
-  // P: Index and Middle pointing forward/down, Thumb supporting
   P: [
-    { angle: -120, length: 15 },
-    { angle: -160, length: 22 },
-    { angle: -150, length: 22 },
-    { angle: -85, length: 6 },
-    { angle: -80, length: 6 },
+    { angle: -180, length: 20 }, // Thumb LEFT
+    { angle: 135, length: 26 }, // Index DOWN-LEFT
+    { angle: 90, length: 28 }, // Middle DOWN
+    fold, fold
   ],
-  // Q: Index and Thumb pointing straight down
   Q: [
-    { angle: -45, length: 18 },
-    { angle: -45, length: 20 },
-    { angle: -90, length: 6 },
-    { angle: -85, length: 6 },
-    { angle: -80, length: 6 },
+    { angle: 135, length: 22 }, // Thumb DOWN-LEFT
+    { angle: 90, length: 26 }, // Index DOWN
+    fold, fold, fold
   ],
-  // R: Index and Middle crossed
   R: [
-    { angle: -110, length: 8 },
-    { angle: -85, length: 26 },  // Crossed index
-    { angle: -95, length: 28 },  // Crossed middle
-    { angle: -85, length: 6 },
-    { angle: -80, length: 6 },
+    foldThumb,
+    { angle: -70, length: 28 }, // Index UP-RIGHT
+    { angle: -110, length: 30 }, // Middle UP-LEFT (crossed)
+    fold, fold
   ],
-  // S: Fist, thumb tucked over other fingers
   S: [
-    { angle: -90, length: 12 },  // Thumb over front of fist
-    { angle: -95, length: 6 },
-    { angle: -90, length: 6 },
-    { angle: -85, length: 6 },
-    { angle: -80, length: 6 },
+    { angle: 0, length: 26 }, // Thumb wraps FRONT
+    fold, fold, fold, fold
   ],
-  // T: Fist with thumb tucked between index and middle
   T: [
-    { angle: -95, length: 12 },
-    { angle: -95, length: 8 },
-    { angle: -90, length: 6 },
-    { angle: -85, length: 6 },
-    { angle: -80, length: 6 },
+    { angle: -45, length: 20 }, // Thumb tucked
+    fold, fold, fold, fold
   ],
-  // U: Index and Middle straight up close together
   U: [
-    { angle: -110, length: 8 },
-    { angle: -92, length: 26 },
-    { angle: -88, length: 26 },
-    { angle: -85, length: 6 },
-    { angle: -80, length: 6 },
+    foldThumb,
+    { angle: -95, length: 28 }, // Index UP
+    { angle: -85, length: 30 }, // Middle UP
+    fold, fold
   ],
-  // V: Index and Middle straight up spread apart
   V: [
-    { angle: -110, length: 8 },
-    { angle: -110, length: 26 },
-    { angle: -70, length: 26 },
-    { angle: -85, length: 6 },
-    { angle: -80, length: 6 },
+    foldThumb,
+    { angle: -110, length: 28 }, // Index UP-LEFT
+    { angle: -70, length: 30 }, // Middle UP-RIGHT
+    fold, fold
   ],
-  // W: Index, Middle, and Ring straight up spread apart
   W: [
-    { angle: -110, length: 8 },
-    { angle: -115, length: 26 },
-    { angle: -90, length: 28 },
-    { angle: -65, length: 26 },
-    { angle: -80, length: 6 },
+    foldThumb,
+    { angle: -115, length: 28 },
+    { angle: -90, length: 30 },
+    { angle: -65, length: 28 },
+    fold
   ],
-  // X: Index hooked, others folded
   X: [
-    { angle: -110, length: 8 },
-    { angle: -120, length: 18 }, // Hooked index
-    { angle: -90, length: 6 },
-    { angle: -85, length: 6 },
-    { angle: -80, length: 6 },
+    foldThumb,
+    { angle: -135, length: 18 }, // Index hooked
+    fold, fold, fold
   ],
-  // Y: Thumb and Pinky extended wide, others folded
   Y: [
-    { angle: -180, length: 20 }, // Thumb pointing left
-    { angle: -95, length: 6 },
-    { angle: -90, length: 6 },
-    { angle: -85, length: 6 },
-    { angle: -60, length: 20 },  // Pinky pointing right-up
+    { angle: -180, length: 24 }, // Thumb LEFT
+    fold, fold, fold,
+    { angle: -30, length: 24 } // Pinky RIGHT
   ],
-  // Z: Index finger extended pointing up, drawing a line
   Z: [
-    { angle: -110, length: 8 },
-    { angle: -95, length: 26 },  // Index pointing
-    { angle: -90, length: 6 },
-    { angle: -85, length: 6 },
-    { angle: -80, length: 6 },
+    foldThumb,
+    { angle: -120, length: 28 }, // Index UP-LEFT
+    fold, fold, fold
   ],
 };
 
@@ -240,38 +192,88 @@ const defaultHand: FingerConfig[] = [
   { angle: -80, length: 18 },
 ];
 
-export default function JBIOverlay({ caption }: JBIOverlayProps) {
+export default function JBIOverlay({
+  caption,
+  jbiVideoUrl,
+  primaryVideoRef,
+}: JBIOverlayProps) {
   const [expanded, setExpanded] = useState(false);
   const [letterIndex, setLetterIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(true);
   const [speed, setSpeed] = useState(800);
+  const jbiVideoRef = useRef<HTMLVideoElement>(null);
 
- 
+  // Sync JBI video and primary video
+  useEffect(() => {
+    if (!jbiVideoUrl || !primaryVideoRef?.current) return;
+
+    let animationFrameId: number;
+
+    const syncVideos = () => {
+      const primary = primaryVideoRef.current;
+      const jbi = jbiVideoRef.current;
+
+      if (primary && jbi) {
+        // Sync play/pause states
+        if (primary.paused && !jbi.paused) {
+          jbi.pause();
+        } else if (!primary.paused && jbi.paused) {
+          jbi
+            .play()
+            .catch((err) => console.log("Failed to play JBI video:", err));
+        }
+
+        // Sync playback rate
+        if (primary.playbackRate !== jbi.playbackRate) {
+          jbi.playbackRate = primary.playbackRate;
+        }
+
+        // Sync current time if drift is larger than 0.1 seconds
+        const timeDiff = Math.abs(primary.currentTime - jbi.currentTime);
+        if (timeDiff > 0.1 && jbi.readyState >= 2) {
+          jbi.currentTime = primary.currentTime;
+        }
+      }
+
+      animationFrameId = requestAnimationFrame(syncVideos);
+    };
+
+    animationFrameId = requestAnimationFrame(syncVideos);
+
+    return () => {
+      cancelAnimationFrame(animationFrameId);
+    };
+  }, [jbiVideoUrl, primaryVideoRef]);
+
   const cleanCaption = (caption || "")
     .toUpperCase()
-    .replace(/[^A-Z ]/g, "") 
-    .replace(/\s+/g, " ");   
+    .replace(/[^A-Z ]/g, "")
+    .replace(/\s+/g, " ");
 
   const letters = cleanCaption.split("");
   const currentLetter = letters[letterIndex] || "";
-  const activeConfig = currentLetter === " " || !currentLetter
-    ? defaultHand
-    : letterConfigs[currentLetter] || defaultHand;
+  const activeConfig =
+    currentLetter === " " || !currentLetter
+      ? defaultHand
+      : letterConfigs[currentLetter] || defaultHand;
 
   // Group letters into words with absolute start/end indices for rich visual rendering
-  const wordsWithIndices = cleanCaption.split(" ").map((word, wIdx, arr) => {
-    const prevWords = arr.slice(0, wIdx);
-    const startIndex = prevWords.join(" ").length + (wIdx > 0 ? 1 : 0);
-    return {
-      word,
-      startIndex,
-      endIndex: startIndex + word.length,
-    };
-  }).filter(item => item.word.length > 0);
+  const wordsWithIndices = cleanCaption
+    .split(" ")
+    .map((word, wIdx, arr) => {
+      const prevWords = arr.slice(0, wIdx);
+      const startIndex = prevWords.join(" ").length + (wIdx > 0 ? 1 : 0);
+      return {
+        word,
+        startIndex,
+        endIndex: startIndex + word.length,
+      };
+    })
+    .filter((item) => item.word.length > 0);
 
   // Find the word that contains the current letter index
   const activeWordObj = wordsWithIndices.find(
-    (w) => letterIndex >= w.startIndex && letterIndex < w.endIndex
+    (w) => letterIndex >= w.startIndex && letterIndex < w.endIndex,
   );
   const currentWord = activeWordObj ? activeWordObj.word : "";
 
@@ -302,7 +304,10 @@ export default function JBIOverlay({ caption }: JBIOverlayProps) {
 
   const renderHand = (sizeClass = "w-28 h-28") => {
     return (
-      <svg viewBox="0 0 100 100" className={`${sizeClass} mx-auto drop-shadow-md`}>
+      <svg
+        viewBox="0 0 100 100"
+        className={`${sizeClass} mx-auto drop-shadow-md`}
+      >
         {/* Palm base shape */}
         <path
           d="M 28,68 C 26,82 40,88 52,88 C 68,88 74,78 74,62 C 74,56 71,55 69,55 L 61,50 L 52,47 L 43,50 L 35,62 Z"
@@ -312,7 +317,7 @@ export default function JBIOverlay({ caption }: JBIOverlayProps) {
           strokeLinecap="round"
           strokeLinejoin="round"
         />
-        
+
         {/* Fingers */}
         {activeConfig.map((finger, i) => {
           // Base points on 100x100 grid
@@ -324,8 +329,13 @@ export default function JBIOverlay({ caption }: JBIOverlayProps) {
             { x: 69, y: 55 }, // Pinky
           ];
           const base = bases[i];
-          const coords = getFingerCoords(base.x, base.y, finger.angle, finger.length);
-          
+          const coords = getFingerCoords(
+            base.x,
+            base.y,
+            finger.angle,
+            finger.length,
+          );
+
           return (
             <motion.line
               key={i}
@@ -346,204 +356,238 @@ export default function JBIOverlay({ caption }: JBIOverlayProps) {
     );
   };
 
+  const JbiVideoBox = () => {
+    if (!jbiVideoUrl) return null;
+    return (
+      <div className="absolute bottom-4 left-4 z-20 w-24 md:w-32 aspect-video bg-[#1A1A1A] rounded-xl border-2 border-pink-400 overflow-hidden shadow-[2px_2px_0_rgba(0,0,0,0.3)]">
+        <video
+          ref={jbiVideoRef}
+          className="w-full h-full object-cover"
+          muted
+          playsInline
+          loop
+        >
+          <source src={jbiVideoUrl} type="video/mp4" />
+        </video>
+        <div className="absolute top-1 left-1 bg-pink-500 text-[8px] font-black text-white px-1.5 py-0.5 rounded uppercase tracking-widest">
+          JBI Sync
+        </div>
+      </div>
+    );
+  };
+
   if (!expanded) {
     return (
-      <motion.div
-        layout
-        onClick={() => setExpanded(true)}
-        className="absolute bottom-4 right-4 z-20 cursor-pointer"
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-      >
-        <div className="bg-white/95 backdrop-blur-md rounded-[20px] border-2 border-pink-300 shadow-xl shadow-pink-200/30 p-2.5 flex items-center gap-3">
-          {/* Animated Hand Visualizer Container */}
-          <div className="relative w-12 h-12 bg-gradient-to-br from-pink-50 to-pink-100 rounded-[14px] flex items-center justify-center flex-shrink-0 border border-pink-200">
-            {renderHand("w-10 h-10")}
-            {currentLetter && currentLetter !== " " && (
-              <div className="absolute -top-1.5 -right-1.5 bg-pink-500 text-white w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black shadow-md shadow-pink-300">
-                {currentLetter}
-              </div>
-            )}
+      <>
+        <JbiVideoBox />
+        <motion.div
+          layout
+          onClick={() => setExpanded(true)}
+          className="absolute bottom-4 right-4 z-20 cursor-pointer"
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          <div className="bg-white/95 backdrop-blur-md rounded-[20px] border-2 border-pink-300 shadow-xl shadow-pink-200/30 p-2.5 flex items-center gap-3">
+            {/* Animated Hand Visualizer Container */}
+            <div className="relative w-12 h-12 bg-gradient-to-br from-pink-50 to-pink-100 rounded-[14px] flex items-center justify-center flex-shrink-0 border border-pink-200">
+              {renderHand("w-10 h-10")}
+              {currentLetter && currentLetter !== " " && (
+                <div className="absolute -top-1.5 -right-1.5 bg-pink-500 text-white w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black shadow-md shadow-pink-300">
+                  {currentLetter}
+                </div>
+              )}
+            </div>
+            <div className="pr-1">
+              <p className="font-black text-pink-900 text-[9px] uppercase tracking-wider">
+                Bahasa Isyarat
+              </p>
+              <p className="font-bold text-[#6B7280] text-[8px] mt-0.5">
+                Mengeja:{" "}
+                <span className="text-pink-600 font-extrabold">
+                  {currentWord || "..."}
+                </span>
+              </p>
+            </div>
           </div>
-          <div className="pr-1">
-            <p className="font-black text-pink-900 text-[9px] uppercase tracking-wider">
-              Bahasa Isyarat
-            </p>
-            <p className="font-bold text-[#6B7280] text-[8px] mt-0.5">
-              Mengeja: <span className="text-pink-600 font-extrabold">{currentWord || "..."}</span>
-            </p>
-          </div>
-        </div>
-      </motion.div>
+        </motion.div>
+      </>
     );
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      className="absolute inset-0 z-30 bg-white/95 backdrop-blur-md p-4 flex flex-col justify-between rounded-[26px]"
-    >
-      {/* Header */}
-      <div className="flex items-center justify-between border-b border-pink-100 pb-2">
-        <div className="flex items-center gap-2">
-          <span className="text-xl">🤟</span>
-          <div>
-            <h3 className="font-black text-pink-900 text-sm">
-              Ejaan Isyarat Jari (BISINDO)
-            </h3>
-            <p className="text-[10px] text-pink-600 font-bold">
-              Belajar mengeja kata dengan isyarat tangan
-            </p>
+    <>
+      <JbiVideoBox />
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="absolute inset-0 z-30 bg-white/95 backdrop-blur-md p-4 flex flex-col justify-between rounded-[26px]"
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between border-b border-pink-100 pb-2">
+          <div className="flex items-center gap-2">
+            <span className="text-xl">🤟</span>
+            <div>
+              <h3 className="font-black text-pink-900 text-sm">
+                Ejaan Isyarat Jari (BISINDO)
+              </h3>
+              <p className="text-[10px] text-pink-600 font-bold">
+                Belajar mengeja kata dengan isyarat tangan
+              </p>
+            </div>
           </div>
-        </div>
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            setExpanded(false);
-          }}
-          className="p-1 rounded-full hover:bg-pink-100 text-pink-500 transition-colors"
-        >
-          <X size={18} />
-        </button>
-      </div>
-
-      {/* Main Row */}
-      <div className="flex-1 flex gap-4 items-center min-h-0 py-3">
-        {/* Left Column: Visualizer */}
-        <div className="w-1/3 flex flex-col items-center justify-center bg-gradient-to-b from-pink-50/50 to-pink-100/30 rounded-2xl p-2 border border-pink-100 relative">
-          <div className="relative w-full flex justify-center">
-            {renderHand()}
-            {currentLetter && currentLetter !== " " && (
-              <div className="absolute top-0 right-2 bg-pink-500 text-white w-9 h-9 rounded-full flex items-center justify-center text-lg font-black shadow-lg shadow-pink-300 animate-bounce">
-                {currentLetter}
-              </div>
-            )}
-          </div>
-          <p className="text-[10px] font-black text-pink-700 mt-1 uppercase tracking-widest">
-            {currentLetter === " " ? "Jeda Spasi" : `Huruf: ${currentLetter}`}
-          </p>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setExpanded(false);
+            }}
+            className="p-1 rounded-full hover:bg-pink-100 text-pink-500 transition-colors"
+          >
+            <X size={18} />
+          </button>
         </div>
 
-        {/* Right Column: Controls & Words list */}
-        <div className="flex-1 flex flex-col justify-between h-full min-w-0">
-          <div>
-            <p className="text-[10px] font-black text-pink-800/60 uppercase tracking-wider mb-2">
-              Kalimat Mengeja:
+        {/* Main Row */}
+        <div className="flex-1 flex gap-4 items-center min-h-0 py-3">
+          {/* Left Column: Visualizer */}
+          <div className="w-1/3 flex flex-col items-center justify-center bg-gradient-to-b from-pink-50/50 to-pink-100/30 rounded-2xl p-2 border border-pink-100 relative">
+            <div className="relative w-full flex justify-center">
+              {renderHand()}
+              {currentLetter && currentLetter !== " " && (
+                <div className="absolute top-0 right-2 bg-pink-500 text-white w-9 h-9 rounded-full flex items-center justify-center text-lg font-black shadow-lg shadow-pink-300 animate-bounce">
+                  {currentLetter}
+                </div>
+              )}
+            </div>
+            <p className="text-[10px] font-black text-pink-700 mt-1 uppercase tracking-widest">
+              {currentLetter === " " ? "Jeda Spasi" : `Huruf: ${currentLetter}`}
             </p>
-            {/* Words list and letter bubbles */}
-            <div className="flex flex-wrap gap-x-3 gap-y-2 max-h-[110px] overflow-y-auto pr-1">
-              {wordsWithIndices.map((wordObj, wIdx) => {
-                const isWordActive = letterIndex >= wordObj.startIndex && letterIndex < wordObj.endIndex;
-                return (
-                  <div
-                    key={wIdx}
-                    className={`
+          </div>
+
+          {/* Right Column: Controls & Words list */}
+          <div className="flex-1 flex flex-col justify-between h-full min-w-0">
+            <div>
+              <p className="text-[10px] font-black text-pink-800/60 uppercase tracking-wider mb-2">
+                Kalimat Mengeja:
+              </p>
+              {/* Words list and letter bubbles */}
+              <div className="flex flex-wrap gap-x-3 gap-y-2 max-h-[110px] overflow-y-auto pr-1">
+                {wordsWithIndices.map((wordObj, wIdx) => {
+                  const isWordActive =
+                    letterIndex >= wordObj.startIndex &&
+                    letterIndex < wordObj.endIndex;
+                  return (
+                    <div
+                      key={wIdx}
+                      className={`
                       flex items-center gap-1 p-1 rounded-2xl border transition-all
-                      ${isWordActive
-                        ? "bg-pink-50 border-pink-300 shadow-sm shadow-pink-100"
-                        : "border-transparent bg-white/40"
+                      ${
+                        isWordActive
+                          ? "bg-pink-50 border-pink-300 shadow-sm shadow-pink-100"
+                          : "border-transparent bg-white/40"
                       }
                     `}
-                  >
-                    {wordObj.word.split("").map((letChar, charOffset) => {
-                      const globalIndex = wordObj.startIndex + charOffset;
-                      const isLetterActive = globalIndex === letterIndex;
-                      return (
-                        <button
-                          key={charOffset}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setLetterIndex(globalIndex);
-                            setIsPlaying(false);
-                          }}
-                          className={`
+                    >
+                      {wordObj.word.split("").map((letChar, charOffset) => {
+                        const globalIndex = wordObj.startIndex + charOffset;
+                        const isLetterActive = globalIndex === letterIndex;
+                        return (
+                          <button
+                            key={charOffset}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setLetterIndex(globalIndex);
+                              setIsPlaying(false);
+                            }}
+                            className={`
                             w-7 h-7 rounded-full flex items-center justify-center text-xs font-black transition-all border
-                            ${isLetterActive
-                              ? "bg-pink-600 text-white border-pink-600 scale-110 shadow-md shadow-pink-200"
-                              : "bg-white text-pink-700 border-pink-200 hover:bg-pink-50"
+                            ${
+                              isLetterActive
+                                ? "bg-pink-600 text-white border-pink-600 scale-110 shadow-md shadow-pink-200"
+                                : "bg-white text-pink-700 border-pink-200 hover:bg-pink-50"
                             }
                           `}
-                        >
-                          {letChar}
-                        </button>
-                      );
-                    })}
-                  </div>
-                );
-              })}
+                          >
+                            {letChar}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  );
+                })}
+              </div>
             </div>
-          </div>
 
-          {/* Controls bar */}
-          <div className="flex items-center gap-3 border-t border-pink-100/50 pt-2">
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setIsPlaying(!isPlaying);
-              }}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-pink-600 hover:bg-pink-700 text-white rounded-xl text-xs font-black transition-colors shadow-md shadow-pink-200"
-            >
-              {isPlaying ? (
-                <>
-                  <Pause size={12} fill="white" /> Pause
-                </>
-              ) : (
-                <>
-                  <Play size={12} fill="white" /> Play
-                </>
-              )}
-            </button>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setLetterIndex(0);
-                setIsPlaying(true);
-              }}
-              className="p-1.5 hover:bg-pink-100 text-pink-600 rounded-xl transition-colors"
-              title="Ulangi dari Awal"
-            >
-              <RotateCcw size={14} />
-            </button>
+            {/* Controls bar */}
+            <div className="flex items-center gap-3 border-t border-pink-100/50 pt-2">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsPlaying(!isPlaying);
+                }}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-pink-600 hover:bg-pink-700 text-white rounded-xl text-xs font-black transition-colors shadow-md shadow-pink-200"
+              >
+                {isPlaying ? (
+                  <>
+                    <Pause size={12} fill="white" /> Pause
+                  </>
+                ) : (
+                  <>
+                    <Play size={12} fill="white" /> Play
+                  </>
+                )}
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setLetterIndex(0);
+                  setIsPlaying(true);
+                }}
+                className="p-1.5 hover:bg-pink-100 text-pink-600 rounded-xl transition-colors"
+                title="Ulangi dari Awal"
+              >
+                <RotateCcw size={14} />
+              </button>
 
-            {/* Speed buttons */}
-            <div className="ml-auto flex items-center gap-1">
-              <span className="text-[9px] font-bold text-pink-700 mr-1">
-                Kecepatan:
-              </span>
-              {[
-                { label: "Lambat", val: 1200 },
-                { label: "Sedang", val: 800 },
-                { label: "Cepat", val: 450 },
-              ].map((sp) => (
-                <button
-                  key={sp.val}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setSpeed(sp.val);
-                  }}
-                  className={`
+              {/* Speed buttons */}
+              <div className="ml-auto flex items-center gap-1">
+                <span className="text-[9px] font-bold text-pink-700 mr-1">
+                  Kecepatan:
+                </span>
+                {[
+                  { label: "Lambat", val: 1200 },
+                  { label: "Sedang", val: 800 },
+                  { label: "Cepat", val: 450 },
+                ].map((sp) => (
+                  <button
+                    key={sp.val}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSpeed(sp.val);
+                    }}
+                    className={`
                     px-2 py-0.5 rounded text-[8px] font-black transition-all
-                    ${speed === sp.val
-                      ? "bg-pink-200 text-pink-800"
-                      : "bg-pink-50 text-pink-600 hover:bg-pink-100"
+                    ${
+                      speed === sp.val
+                        ? "bg-pink-200 text-pink-800"
+                        : "bg-pink-50 text-pink-600 hover:bg-pink-100"
                     }
                   `}
-                >
-                  {sp.label}
-                </button>
-              ))}
+                  >
+                    {sp.label}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Footer Text description */}
-      <div className="bg-pink-50/50 border border-pink-100/60 rounded-xl px-3 py-1.5 mt-1">
-        <p className="text-[11px] font-bold text-pink-800 line-clamp-1">
-          💬 "{caption}"
-        </p>
-      </div>
-    </motion.div>
+        {/* Footer Text description */}
+        <div className="bg-pink-50/50 border border-pink-100/60 rounded-xl px-3 py-1.5 mt-1">
+          <p className="text-[11px] font-bold text-pink-800 line-clamp-1">
+            💬 "{caption}"
+          </p>
+        </div>
+      </motion.div>
+    </>
   );
 }

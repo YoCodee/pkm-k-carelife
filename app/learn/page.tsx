@@ -119,7 +119,7 @@ function LearnPageContent() {
 
           <div className="flex flex-col gap-4 flex-1 mt-4">
             {TEMA_LIST.map((tema, index) => {
-              const lesson = getLessonByTema(tema.id as Tema);
+              const lesson = getLessonByTema(tema.id as Tema, mode);
               const lessonStars = lesson ? starsMap[lesson.id] || 0 : 0;
               const isCompleted = lesson ? completedList.includes(lesson.id) : false;
 

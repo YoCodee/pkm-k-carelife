@@ -41,7 +41,8 @@ export default function SplashScreen({ onFinish }: { onFinish: () => void }) {
           left: "-10%",
           width: "60%",
           height: "40%",
-          background: "radial-gradient(ellipse at 30% 30%, rgba(168,230,207,0.7) 0%, rgba(168,230,207,0.3) 50%, transparent 80%)",
+          background:
+            "radial-gradient(ellipse at 30% 30%, rgba(168,230,207,0.7) 0%, rgba(168,230,207,0.3) 50%, transparent 80%)",
           filter: "blur(40px)",
         }}
       />
@@ -53,7 +54,8 @@ export default function SplashScreen({ onFinish }: { onFinish: () => void }) {
           right: "-10%",
           width: "90%",
           height: "45%",
-          background: "radial-gradient(ellipse at 70% 80%, rgba(255,182,182,0.7) 0%, rgba(255,182,182,0.3) 50%, transparent 80%)",
+          background:
+            "radial-gradient(ellipse at 70% 80%, rgba(255,182,182,0.7) 0%, rgba(255,182,182,0.3) 50%, transparent 80%)",
           filter: "blur(40px)",
         }}
       />
@@ -65,7 +67,8 @@ export default function SplashScreen({ onFinish }: { onFinish: () => void }) {
           left: "-10%",
           width: "65%",
           height: "40%",
-          background: "radial-gradient(ellipse at center, rgba(255,215,0,0.4) 0%, transparent 100%)",
+          background:
+            "radial-gradient(ellipse at center, rgba(255,215,0,0.4) 0%, transparent 100%)",
           filter: "blur(40px)",
         }}
       />

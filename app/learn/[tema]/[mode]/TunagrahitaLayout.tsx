@@ -14,8 +14,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import type { LessonContent, Mode, Tema } from "@/lib/content";
 import SpeedControl from "@/components/accessibility/SpeedControl";
 import StarProgress from "@/components/accessibility/StarProgress";
-import MiniQuiz from "@/components/accessibility/MiniQuiz";
+import InteractiveActivity from "@/components/accessibility/InteractiveActivity";
 import AudioNarrator from "@/components/accessibility/AudioNarrator";
+import { usePrefersReducedMotion } from "@/lib/hooks/usePrefersReducedMotion";
 import { playSFX, triggerHaptic } from "@/lib/sfx";
 
 interface Props {
@@ -25,17 +26,18 @@ interface Props {
 }
 
 export default function TunagrahitaLayout({ lesson, tema, mode }: Props) {
+  const prefersReducedMotion = usePrefersReducedMotion();
   const [currentStep, setCurrentStep] = useState(0);
   const [stars, setStars] = useState(0);
   const [videoSpeed, setVideoSpeed] = useState(0.75);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [showQuiz, setShowQuiz] = useState(false);
+  const [showActivity, setShowActivity] = useState(false);
   const [isFinished, setIsFinished] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
 
   const totalSteps = lesson.steps.length;
-  const step = lesson.steps[currentStep];
-  const hasQuiz = !!step.quiz;
+  const step = lesson.steps[currentStep] || lesson.steps[0];
+  const hasActivity = !!step?.activity;
 
   useEffect(() => {
     if (videoRef.current) {
@@ -57,14 +59,14 @@ export default function TunagrahitaLayout({ lesson, tema, mode }: Props) {
   };
 
   const goNext = () => {
-    if (hasQuiz && !showQuiz) {
+    if (hasActivity && !showActivity) {
       playSFX("click");
       triggerHaptic("click");
-      setShowQuiz(true);
+      setShowActivity(true);
       return;
     }
 
-    setShowQuiz(false);
+    setShowActivity(false);
     setIsPlaying(false);
     if (currentStep < totalSteps - 1) {
       playSFX("click");
@@ -77,13 +79,17 @@ export default function TunagrahitaLayout({ lesson, tema, mode }: Props) {
 
       // Simpan progres bintang ke localStorage secara offline
       try {
-        const completed = JSON.parse(localStorage.getItem("carelife-completed") || "[]");
+        const completed = JSON.parse(
+          localStorage.getItem("carelife-completed") || "[]",
+        );
         if (!completed.includes(lesson.id)) {
           completed.push(lesson.id);
           localStorage.setItem("carelife-completed", JSON.stringify(completed));
         }
-        
-        const starsMap = JSON.parse(localStorage.getItem("carelife-stars") || "{}");
+
+        const starsMap = JSON.parse(
+          localStorage.getItem("carelife-stars") || "{}",
+        );
         const prevStars = starsMap[lesson.id] || 0;
         starsMap[lesson.id] = Math.max(prevStars, stars); // Simpan skor bintang tertinggi
         localStorage.setItem("carelife-stars", JSON.stringify(starsMap));
@@ -93,11 +99,9 @@ export default function TunagrahitaLayout({ lesson, tema, mode }: Props) {
     }
   };
 
-  const handleQuizCorrect = () => {
+  const handleActivityComplete = () => {
     setStars((s) => s + 1);
-    playSFX("success");
-    triggerHaptic("success");
-    setTimeout(() => goNext(), 800);
+    goNext();
   };
 
   const restart = () => {
@@ -105,12 +109,12 @@ export default function TunagrahitaLayout({ lesson, tema, mode }: Props) {
     triggerHaptic("click");
     setCurrentStep(0);
     setStars(0);
-    setShowQuiz(false);
+    setShowActivity(false);
     setIsFinished(false);
     setIsPlaying(false);
   };
 
-  const totalQuizzes = lesson.steps.filter((s) => s.quiz).length;
+  const totalActivities = lesson.steps.filter((s) => s.activity).length;
 
   if (isFinished) {
     return (
@@ -128,13 +132,13 @@ export default function TunagrahitaLayout({ lesson, tema, mode }: Props) {
         </header>
         <div className="px-6 py-8 max-w-[600px] mx-auto">
           <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
+            initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, scale: 0.9 }}
+            animate={prefersReducedMotion ? { opacity: 1 } : { opacity: 1, scale: 1 }}
             className="bg-white rounded-[32px] border-2 border-[#1A1A1A] p-8 text-center shadow-[4px_4px_0_#1A1A1A]"
           >
             <motion.div
-              animate={{ rotate: [0, 15, -15, 0], scale: [1, 1.1, 1] }}
-              transition={{ repeat: Infinity, duration: 2 }}
+              animate={prefersReducedMotion ? {} : { rotate: [0, 15, -15, 0], scale: [1, 1.1, 1] }}
+              transition={prefersReducedMotion ? {} : { repeat: Infinity, duration: 2 }}
               className="text-8xl mb-4"
             >
               🏆
@@ -150,7 +154,7 @@ export default function TunagrahitaLayout({ lesson, tema, mode }: Props) {
               <p className="text-sm font-black text-[#1A1A1A] mb-3">
                 Bintang yang kamu dapat:
               </p>
-              <StarProgress current={stars} total={totalQuizzes} />
+              <StarProgress current={stars} total={totalActivities} />
             </div>
 
             <div className="flex flex-col gap-3">
@@ -188,7 +192,9 @@ export default function TunagrahitaLayout({ lesson, tema, mode }: Props) {
             Kembali
           </Link>
           <div className="text-center">
-            <span className="cl-tag cl-tag-yellow mb-2">👁️ Mode Tunagrahita — Visual</span>
+            <span className="cl-tag cl-tag-yellow mb-2">
+              👁️ Mode Tunagrahita — Visual
+            </span>
             <h1 className="text-2xl md:text-3xl font-black text-[#1A1A1A] mt-2">
               {lesson.title}
             </h1>
@@ -198,11 +204,11 @@ export default function TunagrahitaLayout({ lesson, tema, mode }: Props) {
 
       <div className="px-6 max-w-[600px] mx-auto mb-4">
         <div className="bg-white rounded-[20px] border-2 border-[#1A1A1A] p-4 shadow-[2px_2px_0_#1A1A1A]">
-          <StarProgress current={stars} total={totalQuizzes} />
+          <StarProgress current={stars} total={totalActivities} />
         </div>
       </div>
 
-      <div className="px-6 py-2 max-w-[600px] mx-auto space-y-5">
+      <div className="px-6 py-2  max-w-[600px] mx-auto space-y-5">
         <div className="flex items-center justify-between">
           <p className="text-sm font-black text-[#1A1A1A]">
             Langkah {currentStep + 1} dari {totalSteps}
@@ -210,14 +216,14 @@ export default function TunagrahitaLayout({ lesson, tema, mode }: Props) {
           <div className="flex-1 mx-4 h-4 bg-[#F8F9FA] rounded-full overflow-hidden border-2 border-[#1A1A1A]">
             <motion.div
               animate={{ width: `${((currentStep + 1) / totalSteps) * 100}%` }}
-              transition={{ type: "spring", stiffness: 100 }}
+              transition={prefersReducedMotion ? { duration: 0.1 } : { type: "spring", stiffness: 100 }}
               className="h-full bg-[#FFD700] rounded-full"
             />
           </div>
         </div>
 
         <AnimatePresence mode="wait">
-          {!showQuiz ? (
+          {!showActivity ? (
             <motion.div
               key={`step-${currentStep}`}
               initial={{ opacity: 0, y: 30 }}
@@ -228,12 +234,12 @@ export default function TunagrahitaLayout({ lesson, tema, mode }: Props) {
               <div className="bg-white rounded-[32px] border-2 border-[#1A1A1A] p-8 text-center shadow-[4px_4px_0_#1A1A1A]">
                 <motion.div
                   key={step.emoji}
-                  initial={{ scale: 0, rotate: -180 }}
-                  animate={{ scale: 1, rotate: 0 }}
-                  transition={{ type: "spring", stiffness: 200 }}
+                  initial={prefersReducedMotion ? { opacity: 0 } : { scale: 0, rotate: -180 }}
+                  animate={prefersReducedMotion ? { opacity: 1 } : { scale: 1, rotate: 0 }}
+                  transition={prefersReducedMotion ? { duration: 0.1 } : { type: "spring", stiffness: 200 }}
                   className="text-8xl md:text-9xl mb-5"
                 >
-                  {step.emoji}
+                  {step.emoji} 
                 </motion.div>
 
                 <h2 className="text-3xl md:text-4xl font-black text-[#1A1A1A] leading-tight">
@@ -258,13 +264,19 @@ export default function TunagrahitaLayout({ lesson, tema, mode }: Props) {
                     <button
                       onClick={toggleVideo}
                       className={`absolute inset-0 flex items-center justify-center transition-colors duration-300 ${
-                        isPlaying ? "bg-transparent" : "bg-black/20 hover:bg-black/30"
+                        isPlaying
+                          ? "bg-transparent"
+                          : "bg-black/20 hover:bg-black/30"
                       }`}
                     >
                       <motion.div
-                        whileTap={{ scale: 0.9 }}
+                        whileTap={prefersReducedMotion ? {} : { scale: 0.9 }}
                         className={`w-20 h-20 md:w-24 md:h-24 bg-[#FFD700] rounded-full flex items-center justify-center border-2 border-[#1A1A1A] shadow-[3px_3px_0_#1A1A1A] transition-all duration-300 ${
-                          isPlaying ? "opacity-0 scale-75 pointer-events-none" : "opacity-100 scale-100"
+                          isPlaying
+                            ? "opacity-0 scale-75 pointer-events-none"
+                            : prefersReducedMotion 
+                              ? "opacity-100" 
+                              : "opacity-100 scale-100"
                         }`}
                       >
                         {isPlaying ? (
@@ -285,7 +297,11 @@ export default function TunagrahitaLayout({ lesson, tema, mode }: Props) {
                 </div>
               )}
 
-              <AudioNarrator text={step.audioNarration} autoPlay shouldStop={isPlaying} />
+              <AudioNarrator
+                text={step.audioNarration}
+                autoPlay
+                shouldStop={isPlaying}
+              />
 
               <motion.button
                 whileHover={{ scale: 1.02 }}
@@ -293,8 +309,8 @@ export default function TunagrahitaLayout({ lesson, tema, mode }: Props) {
                 onClick={goNext}
                 className="w-full py-6 bg-[#FFD700] text-[#1A1A1A] rounded-[24px] font-black text-xl border-2 border-[#1A1A1A] shadow-[4px_4px_0_#1A1A1A] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_#1A1A1A] transition-all flex items-center justify-center gap-3"
               >
-                {hasQuiz ? (
-                  <>🎮 Kuis Dulu!</>
+                {hasActivity ? (
+                  <>🎮 Main Game!</>
                 ) : currentStep === totalSteps - 1 ? (
                   <>✅ Selesai!</>
                 ) : (
@@ -306,16 +322,15 @@ export default function TunagrahitaLayout({ lesson, tema, mode }: Props) {
             </motion.div>
           ) : (
             <motion.div
-              key="quiz"
+              key="activity"
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
             >
-              {step.quiz && (
-                <MiniQuiz
-                  question={step.quiz.question}
-                  options={step.quiz.options}
-                  onCorrect={handleQuizCorrect}
+              {step.activity && (
+                <InteractiveActivity
+                  activity={step.activity}
+                  onCorrect={handleActivityComplete}
                 />
               )}
             </motion.div>

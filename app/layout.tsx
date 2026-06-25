@@ -17,6 +17,7 @@ export const metadata: Metadata = {
   title: "CareLife - Platform Edukasi Anak Berkebutuhan Khusus",
   description:
     "Platform digital pendamping buku CareLife untuk anak berkebutuhan khusus dengan fitur aksesibilitas lengkap.",
+  manifest: "/manifest.json",
 };
 
 export default function RootLayout({

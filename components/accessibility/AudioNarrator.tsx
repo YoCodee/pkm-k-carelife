@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect } from "react";
 import { Volume2, VolumeX } from "lucide-react";
 import { motion } from "framer-motion";
+import { useSpeechSynthesisSSR } from "@/lib/hooks/useSpeechSynthesisSSR";
 
 interface AudioNarratorProps {
   text: string;
@@ -12,58 +13,7 @@ interface AudioNarratorProps {
 }
 
 export default function AudioNarrator({ text, autoPlay = false, onEnd, shouldStop = false }: AudioNarratorProps) {
-  const [isSpeaking, setIsSpeaking] = useState(false);
-  const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
-
-  const speak = useCallback((content: string) => {
-    if (!("speechSynthesis" in window)) return;
-    speechSynthesis.cancel();
-
-    const utterance = new SpeechSynthesisUtterance(content);
-    utteranceRef.current = utterance; // Simpan di ref agar tidak di-garbage collect oleh HP
-    utterance.lang = "id-ID";
-
-    // Cari daftar suara Bahasa Indonesia yang tersedia di browser/perangkat
-    const voices = speechSynthesis.getVoices();
-    const idVoices = voices.filter(
-      (v) => v.lang.toLowerCase().startsWith("id") || v.lang.toLowerCase() === "id-id"
-    );
-
-    // Prioritaskan suara "Natural/Online" (Edge/Chrome), lalu suara MacOS (Damayanti), 
-    // lalu Google TTS, lalu fallback ke suara Indonesia pertama yang tersedia
-    const bestVoice = idVoices.find((v) => 
-      v.name.toLowerCase().includes("natural") || 
-      v.name.toLowerCase().includes("online") || 
-      v.name.toLowerCase().includes("neural")
-    ) || idVoices.find((v) => 
-      v.name.toLowerCase().includes("damayanti")
-    ) || idVoices.find((v) => 
-      v.name.toLowerCase().includes("google")
-    ) || idVoices[0];
-
-    if (bestVoice) {
-      utterance.voice = bestVoice;
-    }
-
-    utterance.rate = 0.9;
-    utterance.pitch = 1.1;
-    utterance.onend = () => {
-      setIsSpeaking(false);
-      utteranceRef.current = null;
-      onEnd?.();
-    };
-
-    speechSynthesis.speak(utterance);
-    setIsSpeaking(true);
-  }, [onEnd]);
-
-  const stop = useCallback(() => {
-    if ("speechSynthesis" in window) {
-      speechSynthesis.cancel();
-      utteranceRef.current = null;
-      setIsSpeaking(false);
-    }
-  }, []);
+  const { isSpeaking, speak, stop } = useSpeechSynthesisSSR();
 
   // Hentikan suara jika shouldStop bernilai true
   useEffect(() => {
@@ -75,20 +25,20 @@ export default function AudioNarrator({ text, autoPlay = false, onEnd, shouldSto
   useEffect(() => {
     if (autoPlay && text && !shouldStop) {
       // Perkecil jeda waktu menjadi 100ms agar dideteksi sebagai bagian dari klik user di HP
-      const timeout = setTimeout(() => speak(text), 100);
+      const timeout = setTimeout(() => speak(text, 0.9, 1.1, onEnd), 100);
       return () => {
         clearTimeout(timeout);
         stop();
       };
     }
     return () => stop();
-  }, [text, autoPlay, speak, stop, shouldStop]);
+  }, [text, autoPlay, speak, stop, shouldStop, onEnd]);
 
   const handleToggle = () => {
     if (isSpeaking) {
       stop();
     } else {
-      speak(text);
+      speak(text, 0.9, 1.1, onEnd);
     }
   };
 

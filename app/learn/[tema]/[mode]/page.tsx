@@ -53,7 +53,7 @@ export default function LearnDetailPage({ params }: PageProps) {
     );
   }
 
-  const lesson = getLessonByTema(tema);
+  const lesson = getLessonByTema(tema, mode);
 
   if (!lesson) {
     return (
@@ -90,13 +90,28 @@ export default function LearnDetailPage({ params }: PageProps) {
   return (
     <div className="min-h-screen pb-24">
       {mode === "suara" && (
-        <TunanetraLayout lesson={lesson} tema={tema} mode={mode} />
+        <TunanetraLayout
+          key={lesson.id}
+          lesson={lesson}
+          tema={tema}
+          mode={mode}
+        />
       )}
       {mode === "ceria" && (
-        <TunarunguLayout lesson={lesson} tema={tema} mode={mode} />
+        <TunarunguLayout
+          key={lesson.id}
+          lesson={lesson}
+          tema={tema}
+          mode={mode}
+        />
       )}
       {mode === "visual" && (
-        <TunagrahitaLayout lesson={lesson} tema={tema} mode={mode} />
+        <TunagrahitaLayout
+          key={lesson.id}
+          lesson={lesson}
+          tema={tema}
+          mode={mode}
+        />
       )}
       <ChatButton />
     </div>

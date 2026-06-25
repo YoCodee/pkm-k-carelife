@@ -19,12 +19,27 @@ export interface VideoContent {
   subtitles?: string;
 }
 
-// ── New Step-by-Step Lesson Data ──
 
 export interface QuizOption {
   emoji: string;
   label: string;
   isCorrect: boolean;
+}
+
+export interface ActivityContent {
+  type: "scrub" | "tap_correct" | "drag_match" | "catch_stars";
+  question: string;
+  audioPrompt?: string;
+  targetEmoji?: string;
+  backgroundEmoji?: string;
+  options?: {
+    emoji: string;
+    label: string;
+    isCorrect: boolean;
+  }[];
+  dragItem?: { emoji: string; label: string };
+  targetItem?: { emoji: string; label: string };
+  starCount?: number;
 }
 
 export interface LessonStep {
@@ -34,23 +49,26 @@ export interface LessonStep {
   textSimple: string;
   textCaption: string;
   audioNarration: string;
-  tactileGuidance?: string; // Panduan raba buku fisik untuk tunanetra
+  tactileGuidance?: string; 
   videoClipUrl?: string;
+  jbiVideoUrl?: string;
   quiz?: {
     question: string;
     options: QuizOption[];
   };
+  activity?: ActivityContent;
 }
 
 export interface LessonContent {
   id: string;
   tema: Tema;
+  mode: Mode;
   title: string;
   description: string;
   steps: LessonStep[];
 }
 
-// ── Static Lists ──
+
 
 export const TEMA_LIST = [
   {
@@ -109,283 +127,677 @@ export const MODE_LIST = [
   },
 ];
 
-// ── Step-by-step Lesson Data (shared across modes, rendered differently) ──
+
 
 export const LESSON_CONTENT: LessonContent[] = [
-  // ═══════════════════ PERAWATAN DIRI ═══════════════════
+
   {
-    id: "lesson-perawatan-1",
+    id: "lesson-perawatan-1-ceria",
     tema: "perawatan-diri",
-    title: "Cara Mencuci Tangan",
-    description: "Pelajari langkah-langkah mencuci tangan yang benar dan sehat",
+    mode: "ceria",
+    title: "Keterampilan Merawat Diri (Tunarungu)",
+    description: "Mengenal pubertas, menjaga kebersihan diri, organ reproduksi, serta kesehatan fisik & mental.",
     steps: [
       {
-        id: "pd-1",
+        id: "tr-pd-1",
         order: 1,
-        emoji: "🚿",
-        textSimple: "Buka keran air",
-        textCaption: "Langkah pertama: buka keran air dan basahi kedua tanganmu dengan air mengalir",
-        audioNarration: "Langkah pertama, buka keran air. Basahi kedua tanganmu dengan air yang mengalir sampai semua bagian tangan basah.",
-        tactileGuidance: "Raba gambar timbul keran air di sudut kiri atas halaman 1 buku fisik CareLife.",
+        emoji: "🧑‍🦱",
+        textSimple: "Masa Pubertas & Perubahan Diri",
+        textCaption: "Remaja mengalami pubertas: perubahan tubuh (jakun, mimpi basah, menstruasi, payudara) dan perasaan yang sering berubah-ubah.",
+        audioNarration: "Masa remaja adalah masa transisi ke dewasa yang disebut pubertas. Tubuh mengalami perubahan fisik dan emosi karena hormon. Ini adalah proses normal.",
         videoClipUrl: "https://www.w3schools.com/html/mov_bbb.mp4",
+        jbiVideoUrl: "https://www.w3schools.com/html/mov_bbb.mp4",
       },
       {
-        id: "pd-2",
+        id: "tr-pd-2",
         order: 2,
         emoji: "🧼",
-        textSimple: "Pakai sabun",
-        textCaption: "Ambil sabun secukupnya dan ratakan ke seluruh telapak tangan",
-        audioNarration: "Langkah kedua, ambil sabun secukupnya. Ratakan sabun ke seluruh telapak tanganmu.",
-        tactileGuidance: "Raba bentuk botol sabun timbul yang bertekstur licin di bagian tengah halaman 2.",
+        textSimple: "Pentingnya Menjaga Kebersihan Diri",
+        textCaption: "Mandi minimal 2 kali sehari memakai sabun, ganti pakaian bersih setiap hari, sikat gigi, keramas, potong kuku, dan cuci tangan.",
+        audioNarration: "Menjaga kebersihan diri membuat penampilan rapi, badan segar, dan mencegah bau badan atau jerawat akibat keringat pubertas.",
         videoClipUrl: "https://www.w3schools.com/html/mov_bbb.mp4",
-        quiz: {
-          question: "Mana yang dipakai untuk cuci tangan?",
+        jbiVideoUrl: "https://www.w3schools.com/html/mov_bbb.mp4",
+      },
+      {
+        id: "tr-pd-3",
+        order: 3,
+        emoji: "🩸",
+        textSimple: "Menjaga Kebersihan Organ Reproduksi",
+        textCaption: "Perempuan: ganti pembalut teratur saat menstruasi. Laki-laki: mandi/bersihkan diri setelah mimpi basah. Ganti pakaian dalam setiap hari.",
+        audioNarration: "Kebersihan organ reproduksi sangat penting untuk mencegah infeksi. Menstruasi dan mimpi basah adalah proses alami yang normal.",
+        videoClipUrl: "https://www.w3schools.com/html/mov_bbb.mp4",
+        jbiVideoUrl: "https://www.w3schools.com/html/mov_bbb.mp4",
+      },
+      {
+        id: "tr-pd-4",
+        order: 4,
+        emoji: "🧠",
+        textSimple: "Menjaga Kesehatan Fisik dan Mental",
+        textCaption: "Makan bergizi, olahraga rutin, tidur 8 jam, kelola emosi dengan bercerita ke orang terpercaya, dan lakukan kegiatan positif.",
+        audioNarration: "Kesehatan fisik dijaga dengan makanan sehat, olahraga, tidur cukup. Kesehatan mental dijaga dengan bercerita kepada orang yang dipercaya.",
+        videoClipUrl: "https://www.w3schools.com/html/mov_bbb.mp4",
+        jbiVideoUrl: "https://www.w3schools.com/html/mov_bbb.mp4",
+      }
+    ]
+  },
+  {
+    id: "lesson-perlindungan-1-ceria",
+    tema: "perlindungan-diri",
+    mode: "ceria",
+    title: "Keterampilan Perlindungan Diri (Tunarungu)",
+    description: "Memahami hak keamanan, membedakan sentuhan aman/tidak aman, berani menolak, dan mencari bantuan.",
+    steps: [
+      {
+        id: "tr-pld-1",
+        order: 1,
+        emoji: "🛡️",
+        textSimple: "Mengenal Hak Keamanan Diri",
+        textCaption: "Setiap anak berhak hidup aman dan dilindungi dari kekerasan. Kamu berhak dilindungi dan mencari bantuan jika merasa terancam.",
+        audioNarration: "Setiap anak berhak aman dan dilindungi. Sebagai anak tunarungu, kamu harus tahu situasi yang aman dan tidak aman.",
+        videoClipUrl: "https://www.w3schools.com/html/mov_bbb.mp4",
+        jbiVideoUrl: "https://www.w3schools.com/html/mov_bbb.mp4",
+      },
+      {
+        id: "tr-pld-2",
+        order: 2,
+        emoji: "🙅‍♀️",
+        textSimple: "Sentuhan Aman & Tidak Aman",
+        textCaption: "Sentuhan aman: bersalaman, pelukan orang tua. Sentuhan tidak aman: menyentuh area pribadi (dada, mulut, kemaluan, pantat) tanpa izin.",
+        audioNarration: "Tubuhmu adalah milikmu. Ketahuilah perbedaan sentuhan yang aman dan tidak aman. Bagian pribadi tidak boleh disentuh orang lain.",
+        videoClipUrl: "https://www.w3schools.com/html/mov_bbb.mp4",
+        jbiVideoUrl: "https://www.w3schools.com/html/mov_bbb.mp4",
+      },
+      {
+        id: "tr-pld-3",
+        order: 3,
+        emoji: "🗣️",
+        textSimple: "Berani Berkata Tidak & Cari Bantuan",
+        textCaption: "Katakan 'TIDAK' atau 'Jangan lakukan itu' jika tidak nyaman. Segera menjauh dan ceritakan kepada orang tua atau guru.",
+        audioNarration: "Jangan takut menolak hal yang membuat tidak nyaman. Katakan TIDAK dengan tegas, lalu segera lari dan cari bantuan orang dewasa yang dipercaya.",
+        videoClipUrl: "https://www.w3schools.com/html/mov_bbb.mp4",
+        jbiVideoUrl: "https://www.w3schools.com/html/mov_bbb.mp4",
+      }
+    ]
+  },
+  {
+    id: "lesson-sosial-1-ceria",
+    tema: "keterampilan-sosial",
+    mode: "ceria",
+    title: "Keterampilan Sosial (Tunarungu)",
+    description: "Komunikasi menggunakan bahasa isyarat/tulisan, membangun pertemanan, kerja sama, dan mengelola emosi.",
+    steps: [
+      {
+        id: "tr-ks-1",
+        order: 1,
+        emoji: "🤝",
+        textSimple: "Pentingnya Keterampilan Sosial",
+        textCaption: "Keterampilan sosial membantu berteman dan berkomunikasi dengan bahasa isyarat, tulisan, gambar, atau ekspresi tubuh.",
+        audioNarration: "Keterampilan sosial membantu kita bergaul. Latihlah berkomunikasi dengan cara yang paling nyaman bagimu.",
+        videoClipUrl: "https://www.w3schools.com/html/mov_bbb.mp4",
+        jbiVideoUrl: "https://www.w3schools.com/html/mov_bbb.mp4",
+      },
+      {
+        id: "tr-ks-2",
+        order: 2,
+        emoji: "👋",
+        textSimple: "Membangun Hubungan dengan Sesama",
+        textCaption: "Menyapa teman/guru dengan ramah, perkenalkan diri, dan perhatikan ekspresi atau gerakan bibir lawan bicara saat mengobrol.",
+        audioNarration: "Sapa orang lain dengan ramah. Perhatikan bahasa isyarat atau gerakan tubuh mereka untuk mengurangi kesalahpahaman.",
+        videoClipUrl: "https://www.w3schools.com/html/mov_bbb.mp4",
+        jbiVideoUrl: "https://www.w3schools.com/html/mov_bbb.mp4",
+      },
+      {
+        id: "tr-ks-3",
+        order: 3,
+        emoji: "🎨",
+        textSimple: "Bekerja Sama & Memahami Perbedaan",
+        textCaption: "Kerja kelompok saling membantu, menghargai perbedaan kemampuan/sifat teman, serta selesaikan masalah dengan tenang.",
+        audioNarration: "Bekerja sama membuat tugas lebih mudah. Hargai perbedaan kemampuan dan pendapat teman dengan sikap saling menghormati.",
+        videoClipUrl: "https://www.w3schools.com/html/mov_bbb.mp4",
+        jbiVideoUrl: "https://www.w3schools.com/html/mov_bbb.mp4",
+      },
+      {
+        id: "tr-ks-4",
+        order: 4,
+        emoji: "🧘‍♂️",
+        textSimple: "Mengelola Emosi dalam Pergaulan",
+        textCaption: "Saat marah/sedih, tenangkan diri (tarik napas/menjauh), lalu ceritakan perasaan ke orang tua, guru, atau teman dekat.",
+        audioNarration: "Perubahan emosi saat remaja adalah wajar. Kelola emosi dengan menenangkan diri dan bercerita kepada orang yang dipercaya.",
+        videoClipUrl: "https://www.w3schools.com/html/mov_bbb.mp4",
+        jbiVideoUrl: "https://www.w3schools.com/html/mov_bbb.mp4",
+      }
+    ]
+  },
+  {
+    id: "lesson-karir-1-ceria",
+    tema: "kesiapan-karir",
+    mode: "ceria",
+    title: "Kesiapan Karir (Tunarungu)",
+    description: "Mengenali potensi diri, membiasakan sikap disiplin/mandiri, dan menyiapkan masa depan dengan percaya diri.",
+    steps: [
+      {
+        id: "tr-kk-1",
+        order: 1,
+        emoji: "💻",
+        textSimple: "Mengenali Potensi Diri & Minat",
+        textCaption: "Setiap orang punya kelebihan (menggambar, komputer, memasak, dll). Kenali minat dari kegiatan yang paling kamu sukai.",
+        audioNarration: "Temukan minatmu sejak remaja. Perhatikan kelebihanmu dan cobalah berbagai hal baru untuk mengenali cita-citamu.",
+        videoClipUrl: "https://www.w3schools.com/html/mov_bbb.mp4",
+        jbiVideoUrl: "https://www.w3schools.com/html/mov_bbb.mp4",
+      },
+      {
+        id: "tr-kk-2",
+        order: 2,
+        emoji: "⏰",
+        textSimple: "Sikap Kerja dalam Kehidupan Sehari-hari",
+        textCaption: "Latih disiplin waktu, kerja sama kelompok, kemandirian (siapkan alat sekolah sendiri), dan tanggung jawab atas tugas.",
+        audioNarration: "Bekal dunia kerja dimulai dari kebiasaan sehari-hari seperti disiplin tepat waktu, mandiri, dan bertanggung jawab atas tugas.",
+        videoClipUrl: "https://www.w3schools.com/html/mov_bbb.mp4",
+        jbiVideoUrl: "https://www.w3schools.com/html/mov_bbb.mp4",
+      },
+      {
+        id: "tr-kk-3",
+        order: 3,
+        emoji: "🌟",
+        textSimple: "Menyiapkan Masa Depan dengan Percaya Diri",
+        textCaption: "Hambatan pendengaran bukan penghalang. Banyak tunarungu sukses jadi desainer, fotografer, programmer. Percayalah pada diri sendiri!",
+        audioNarration: "Percayalah pada kemampuanmu. Terus latih keahlian yang kamu sukai dan bersiaplah meraih cita-citamu dengan percaya diri.",
+        videoClipUrl: "https://www.w3schools.com/html/mov_bbb.mp4",
+        jbiVideoUrl: "https://www.w3schools.com/html/mov_bbb.mp4",
+      }
+    ]
+  },
+
+
+  {
+    id: "lesson-perawatan-1-visual",
+    tema: "perawatan-diri",
+    mode: "visual",
+    title: "Keterampilan Merawat Diri (Tunagrahita)",
+    description: "Belajar mandiri merawat tubuh: sikat gigi, bangun tidur, mandi, berpakaian, cuci tangan, dan makan.",
+    steps: [
+      {
+        id: "tg-pd-1",
+        order: 1,
+        emoji: "🪥",
+        textSimple: "Gosok Gigi Sendiri",
+        textCaption: "Ambil sikat gigi ➡️ beri pasta gigi ➡️ gosok gigi atas & bawah ➡️ kumur air ➡️ bersihkan sikat gigi.",
+        audioNarration: "Ayo gosok gigi agar bersih! Ambil sikat, beri pasta gigi secukupnya, gosok gigi atas dan bawah secara perlahan, lalu kumur-kumur dengan air bersih sampai busanya hilang.",
+        videoClipUrl: "https://www.w3schools.com/html/mov_bbb.mp4",
+        activity: {
+          type: "scrub",
+          question: "Ayo gosok gigi kotor sampai bersih!",
+          targetEmoji: "🦠",
+          backgroundEmoji: "🪥"
+        }
+      },
+      {
+        id: "tg-pd-2",
+        order: 2,
+        emoji: "🛌",
+        textSimple: "Merapikan Tempat Tidur",
+        textCaption: "Setelah bangun tidur: lipat selimut ➡️ rapikan bantal & guling ➡️ berdoa bersyukur.",
+        audioNarration: "Setelah bangun tidur, jangan lupa melipat selimut dan merapikan bantal guling ya. Setelah itu, berdoalah mengucap syukur.",
+        videoClipUrl: "https://www.w3schools.com/html/mov_bbb.mp4",
+      },
+      {
+        id: "tg-pd-3",
+        order: 3,
+        emoji: "🚿",
+        textSimple: "Mandi Sendiri",
+        textCaption: "Basahi tubuh ➡️ pakai sabun ➡️ gosok seluruh badan ➡️ bilas air ➡️ keringkan dengan handuk.",
+        audioNarration: "Mandi membuat badan segar. Basahi badan dengan air, gosokkan sabun ke seluruh tubuh, bilas sampai bersih, lalu keringkan badanmu memakai handuk lembut.",
+        videoClipUrl: "https://www.w3schools.com/html/mov_bbb.mp4",
+        activity: {
+          type: "scrub",
+          question: "Bilas busa sabun di seluruh badan!",
+          targetEmoji: "🫧",
+          backgroundEmoji: "🚶‍♂️"
+        }
+      },
+      {
+        id: "tg-pd-4",
+        order: 4,
+        emoji: "👕",
+        textSimple: "Memakai Pakaian Sendiri",
+        textCaption: "Belajar pakai pakaian mandiri: pakai baju ➡️ pakai celana ➡️ rapikan pakaian.",
+        audioNarration: "Belajar memakai pakaian sendiri. Pasang bajumu, gunakan celana dengan rapi, lalu berkacalah untuk memastikan pakaianmu sudah rapi.",
+        videoClipUrl: "https://www.w3schools.com/html/mov_bbb.mp4",
+      },
+      {
+        id: "tg-pd-5",
+        order: 5,
+        emoji: "🧼",
+        textSimple: "Mencuci Tangan Pakai Sabun",
+        textCaption: "Basahi tangan ➡️ pakai sabun ➡️ gosok telapak & punggung tangan ➡️ bilas air ➡️ keringkan.",
+        audioNarration: "Gosok telapak tangan dan sela jari dengan sabun, bilas dengan air bersih, lalu lap tanganmu sampai kering.",
+        videoClipUrl: "https://www.w3schools.com/html/mov_bbb.mp4",
+        activity: {
+          type: "tap_correct",
+          question: "Mana yang dipakai untuk mencuci tangan?",
           options: [
             { emoji: "🧼", label: "Sabun", isCorrect: true },
-            { emoji: "🍎", label: "Apel", isCorrect: false },
-          ],
-        },
+            { emoji: "✏️", label: "Pensil", isCorrect: false },
+          ]
+        }
       },
       {
-        id: "pd-3",
-        order: 3,
-        emoji: "🤲",
-        textSimple: "Gosok 20 detik",
-        textCaption: "Gosok kedua telapak tangan dan sela-sela jari selama 20 detik",
-        audioNarration: "Langkah ketiga, gosok kedua telapak tanganmu. Jangan lupa gosok juga sela-sela jari selama dua puluh detik ya.",
-        tactileGuidance: "Raba tekstur busa sabun yang terasa menonjol dan kasar di halaman 3.",
+        id: "tg-pd-6",
+        order: 6,
+        emoji: "🍽️",
+        textSimple: "Makan Mandiri",
+        textCaption: "Cuci tangan sebelum makan ➡️ duduk rapi ➡️ gunakan sendok ➡️ habiskan makanan.",
+        audioNarration: "Cuci tangan dulu sebelum makan. Duduklah yang rapi di kursi, gunakan sendok dengan tangan kanan, dan habiskan makananmu dengan bersih.",
         videoClipUrl: "https://www.w3schools.com/html/mov_bbb.mp4",
-      },
-      {
-        id: "pd-4",
-        order: 4,
-        emoji: "💧",
-        textSimple: "Bilas tangan",
-        textCaption: "Bilas tanganmu dengan air bersih sampai sabun hilang",
-        audioNarration: "Langkah keempat, bilas tanganmu dengan air bersih yang mengalir. Pastikan semua sabun sudah hilang.",
-        tactileGuidance: "Temukan garis-garis halus vertikal di halaman 4 yang melambangkan aliran air bersih.",
-        videoClipUrl: "https://www.w3schools.com/html/mov_bbb.mp4",
-        quiz: {
-          question: "Apa yang dilakukan setelah gosok?",
-          options: [
-            { emoji: "💧", label: "Bilas air", isCorrect: true },
-            { emoji: "🧼", label: "Sabun lagi", isCorrect: false },
-          ],
-        },
-      },
-      {
-        id: "pd-5",
-        order: 5,
-        emoji: "🧻",
-        textSimple: "Keringkan tangan",
-        textCaption: "Keringkan tanganmu dengan handuk bersih atau tisu",
-        audioNarration: "Langkah terakhir, keringkan tanganmu menggunakan handuk bersih atau tisu. Hebat! Tanganmu sekarang sudah bersih dan sehat!",
-        tactileGuidance: "Rasakan tekstur lembut seperti handuk asli di bagian kanan halaman 5.",
-        videoClipUrl: "https://www.w3schools.com/html/mov_bbb.mp4",
-      },
-    ],
+      }
+    ]
   },
-
-  // ═══════════════════ PERLINDUNGAN DIRI ═══════════════════
   {
-    id: "lesson-perlindungan-1",
+    id: "lesson-perlindungan-1-visual",
     tema: "perlindungan-diri",
-    title: "Mengenali Tindakan Bahaya",
-    description: "Belajar mengenali dan menghindari tindakan bullying",
+    mode: "visual",
+    title: "Perlindungan Diri (Tunagrahita)",
+    description: "Mengenal bagian tubuh, sentuhan baik/tidak baik, berani berkata TIDAK, mencari bantuan, dan aturan keselamatan.",
     steps: [
       {
-        id: "pld-1",
+        id: "tg-pld-1",
         order: 1,
-        emoji: "👀",
-        textSimple: "Kenali yang jahat",
-        textCaption: "Belajar mengenali tindakan yang tidak baik dari orang lain",
-        audioNarration: "Hai teman! Kali ini kita belajar mengenali tindakan yang tidak baik dari orang lain. Yuk kita mulai!",
-        tactileGuidance: "Raba lambang mata besar yang timbul di halaman 6 untuk fokus memperhatikan sekitarmu.",
+        emoji: "🧑",
+        textSimple: "Mengenal Bagian Tubuh",
+        textCaption: "Boleh disentuh: telinga, hidung, tangan, kaki. TIDAK BOLEH disentuh: dada, mulut, mata, kemaluan, pantat.",
+        audioNarration: "Tubuhmu sangat berharga. Ada bagian yang boleh disentuh seperti tangan dan kaki. Tapi ingat, bagian dada, mulut, kemaluan, dan pantat tidak boleh disentuh oleh orang lain.",
         videoClipUrl: "https://www.w3schools.com/html/mov_bbb.mp4",
       },
       {
-        id: "pld-2",
+        id: "tg-pld-2",
         order: 2,
-        emoji: "🗣️",
-        textSimple: "Berani bilang TIDAK",
-        textCaption: "Katakan TIDAK dengan tegas jika ada yang membuatmu tidak nyaman",
-        audioNarration: "Jika ada yang membuatmu tidak nyaman, katakan TIDAK dengan tegas. Kamu berhak merasa aman.",
-        tactileGuidance: "Temukan simbol X besar yang menonjol dan bertekstur kasar di halaman 7.",
+        emoji: "🤝",
+        textSimple: "Sentuhan Baik vs Sentuhan Tidak Baik",
+        textCaption: "Sentuhan baik: jabat tangan, tos, pelukan orang tua. Sentuhan tidak baik: memegang tubuh tanpa izin, memaksa memeluk/mencium.",
+        audioNarration: "Sentuhan baik membuat kita senang, seperti bersalaman atau tos. Sentuhan tidak baik adalah ketika seseorang memegang tubuhmu tanpa izin.",
         videoClipUrl: "https://www.w3schools.com/html/mov_bbb.mp4",
-        quiz: {
-          question: "Jika ada yang mengganggumu, apa yang harus dilakukan?",
+        activity: {
+          type: "tap_correct",
+          question: "Ada orang memegangmu tanpa izin? Ayo ketuk gambar untuk menolak!",
           options: [
-            { emoji: "🙅", label: "Bilang TIDAK", isCorrect: true },
+            { emoji: "🙅‍♂️", label: "Bilang TIDAK", isCorrect: true },
             { emoji: "😶", label: "Diam saja", isCorrect: false },
-          ],
-        },
+          ]
+        }
       },
       {
-        id: "pld-3",
+        id: "tg-pld-3",
         order: 3,
-        emoji: "🏃",
-        textSimple: "Pergi dari bahaya",
-        textCaption: "Segera pergi dan jauhi situasi yang membuatmu takut atau tidak nyaman",
-        audioNarration: "Jika kamu merasa tidak aman, segera pergi dan jauhi situasi itu. Cari tempat yang aman.",
-        tactileGuidance: "Ikuti jalur timbul berbentuk panah melengkung di halaman 8 untuk mengarahkan langkahmu pergi.",
+        emoji: "🙅‍♂️",
+        textSimple: "Belajar Berkata 'TIDAK'",
+        textCaption: "Katakan dengan tegas: 'TIDAK!', 'JANGAN SENTUH AKU!', atau 'AKU TIDAK MAU!' jika merasa tidak nyaman.",
+        audioNarration: "Jika ada orang membuatmu tidak nyaman atau menyentuh sembarangan, berteriaklah: TIDAK! JANGAN SENTUH AKU! Jangan takut untuk menolak.",
         videoClipUrl: "https://www.w3schools.com/html/mov_bbb.mp4",
       },
       {
-        id: "pld-4",
+        id: "tg-pld-4",
         order: 4,
-        emoji: "👨‍👩‍👧",
-        textSimple: "Cerita ke orang tua",
-        textCaption: "Ceritakan kepada orang tua, guru, atau orang dewasa yang kamu percaya",
-        audioNarration: "Selalu ceritakan apa yang terjadi kepada orang tua, guru, atau orang dewasa yang kamu percaya. Mereka akan membantumu.",
-        tactileGuidance: "Raba bentuk timbul menyerupai pelukan hangat keluarga di halaman 9.",
+        emoji: "👨",
+        textSimple: "Orang Yang Bisa Membantu",
+        textCaption: "Kamu bisa katakan 'Bantu Aku' dan cerita kepada: Ayah, Ibu, Nenek, Kakek, Guru, atau Polisi.",
+        audioNarration: "Jika kamu takut atau bingung, segera lari dan temui orang dewasa yang kamu kenal seperti Ayah, Ibu, Guru, atau Polisi untuk meminta pertolongan.",
         videoClipUrl: "https://www.w3schools.com/html/mov_bbb.mp4",
-        quiz: {
-          question: "Kepada siapa kamu harus cerita?",
-          options: [
-            { emoji: "👨‍👩‍👧", label: "Orang tua", isCorrect: true },
-            { emoji: "👤", label: "Orang asing", isCorrect: false },
-          ],
-        },
       },
-    ],
+      {
+        id: "tg-pld-5",
+        order: 5,
+        emoji: "🛑",
+        textSimple: "Aturan Keselamatan Diri",
+        textCaption: "Harus: main di tempat aman & minta izin. Tidak boleh: ikut orang asing, terima hadiah orang asing, pergi sendiri.",
+        audioNarration: "Selalu bermain bersama keluarga atau teman di tempat yang aman. Ingat, jangan pernah ikut atau menerima hadiah dari orang asing yang tidak dikenal.",
+        videoClipUrl: "https://www.w3schools.com/html/mov_bbb.mp4",
+      }
+    ]
+  },
+  {
+    id: "lesson-sosial-1-visual",
+    tema: "keterampilan-sosial",
+    mode: "visual",
+    title: "Keterampilan Sosial (Tunagrahita)",
+    description: "Belajar menyapa, mendengarkan, bermain bersama, mengucap tolong/maaf/terima kasih, dan menolong teman.",
+    steps: [
+      {
+        id: "tg-ks-1",
+        order: 1,
+        emoji: "😊",
+        textSimple: "Ketika Bertemu Orang Lain",
+        textCaption: "Saat bertemu orang: tersenyum, melihat wajah teman, dan mengucapkan salam.",
+        audioNarration: "Tersenyum lah saat bertemu teman. Lihat matanya dan ucapkan salam seperti halo atau selamat pagi.",
+        videoClipUrl: "https://www.w3schools.com/html/mov_bbb.mp4",
+      },
+      {
+        id: "tg-ks-2",
+        order: 2,
+        emoji: "👂",
+        textSimple: "Mendengarkan Saat Orang Lain Berbicara",
+        textCaption: "Mendengarkan dengan baik: tenang, mengangguk, tidak menyela orang bicara.",
+        audioNarration: "Saat orang lain bicara, dengarkan dengan tenang dan mengangguklah. Jangan memotong atau berteriak ya.",
+        videoClipUrl: "https://www.w3schools.com/html/mov_bbb.mp4",
+      },
+      {
+        id: "tg-ks-3",
+        order: 3,
+        emoji: "🧸",
+        textSimple: "Bermain Bersama Teman",
+        textCaption: "Belajar bersosialisasi: main bergantian, berbagi mainan, dan ikuti arahan guru.",
+        audioNarration: "Bermain bersama sangat seru! Gantian menggunakan mainan, jangan berebut, dan bagilah mainanmu dengan teman.",
+        videoClipUrl: "https://www.w3schools.com/html/mov_bbb.mp4",
+        activity: {
+          type: "drag_match",
+          question: "Ayo bagikan mainan beruang kepada temanmu!",
+          dragItem: { emoji: "🧸", label: "Mainan" },
+          targetItem: { emoji: "👧", label: "Teman" }
+        }
+      },
+      {
+        id: "tg-ks-4",
+        order: 4,
+        emoji: "🙏",
+        textSimple: "Mengucap Kata 'Tolong'",
+        textCaption: "Saat butuh bantuan, katakan dengan sopan: 'Tolong', atau 'Tolong bantu saya'.",
+        audioNarration: "Jika kamu kesulitan, mintalah bantuan dengan sopan. Ucapkan kata tolong di awal kalimatmu.",
+        videoClipUrl: "https://www.w3schools.com/html/mov_bbb.mp4",
+      },
+      {
+        id: "tg-ks-5",
+        order: 5,
+        emoji: "💖",
+        textSimple: "Mengucapkan 'Terima Kasih'",
+        textCaption: "Ucapkan 'Terima kasih' atau 'Terima kasih sudah membantu' setelah ditolong orang lain.",
+        audioNarration: "Setelah ditolong atau diberi sesuatu, jangan lupa tersenyum dan katakan terima kasih.",
+        videoClipUrl: "https://www.w3schools.com/html/mov_bbb.mp4",
+      },
+      {
+        id: "tg-ks-6",
+        order: 6,
+        emoji: "🥺",
+        textSimple: "Mengucapkan 'Maaf'",
+        textCaption: "Jika melakukan kesalahan: katakan 'Maaf' atau 'Maaf, saya tidak sengaja'.",
+        audioNarration: "Jika kamu tidak sengaja menjatuhkan barang teman atau berbuat salah, segeralah meminta maaf dengan tulus.",
+        videoClipUrl: "https://www.w3schools.com/html/mov_bbb.mp4",
+      },
+      {
+        id: "tg-ks-7",
+        order: 7,
+        emoji: "🤝",
+        textSimple: "Saling Menolong Teman",
+        textCaption: "Bantu teman mengambil barang, bantu membereskan kelas, dan temani teman yang sedih.",
+        audioNarration: "Anak baik suka menolong. Bantulah teman yang kesulitan mengambil barang atau temani teman yang sedang bersedih.",
+        videoClipUrl: "https://www.w3schools.com/html/mov_bbb.mp4",
+      }
+    ]
+  },
+  {
+    id: "lesson-karir-1-visual",
+    tema: "kesiapan-karir",
+    mode: "visual",
+    title: "Kesiapan Karir (Tunagrahita)",
+    description: "Belajar mengenal minat diri, profesi, sikap bertanggung jawab, bekerja sama, dan berani mencoba.",
+    steps: [
+      {
+        id: "tg-kk-1",
+        order: 1,
+        emoji: "🎨",
+        textSimple: "Aku Mengenal Diri & Minatku",
+        textCaption: "Apa yang aku sukai? Menggambar, bernyanyi, berkebun, memasak, atau membersihkan ruangan.",
+        audioNarration: "Ayo kenali dirimu! Apakah kamu suka menggambar, bernyanyi, berkebun, atau merapikan barang? Semua kesukaanmu itu hebat!",
+        videoClipUrl: "https://www.w3schools.com/html/mov_bbb.mp4",
+      },
+      {
+        id: "tg-kk-2",
+        order: 2,
+        emoji: "👩‍🍳",
+        textSimple: "Aku Mengenal Pekerjaan",
+        textCaption: "Pekerjaan di sekitar kita: Koki memasak makanan, petani menanam, perajin membuat kerajinan.",
+        audioNarration: "Ada banyak pekerjaan bagus: koki membuat makanan lezat, petani menanam padi, dan perajin membuat barang-barang indah.",
+        videoClipUrl: "https://www.w3schools.com/html/mov_bbb.mp4",
+      },
+      {
+        id: "tg-kk-3",
+        order: 3,
+        emoji: "⏰",
+        textSimple: "Belajar Bertanggung Jawab & Tepat Waktu",
+        textCaption: "Latih tanggung jawab: merapikan tempat tidur, bangun pagi, mengikuti jadwal, datang tepat waktu.",
+        audioNarration: "Orang hebat selalu tepat waktu dan bertanggung jawab. Mari rapikan tempat tidurmu sendiri dan simpan barang-barangmu dengan rapi.",
+        videoClipUrl: "https://www.w3schools.com/html/mov_bbb.mp4",
+      },
+      {
+        id: "tg-kk-4",
+        order: 4,
+        emoji: "🗣️",
+        textSimple: "Berkomunikasi & Bekerja Sama",
+        textCaption: "Bicara dengan sopan, mendengarkan, bekerja bersama teman, dan saling membantu.",
+        audioNarration: "Saat bekerja kelompok, gunakan kata-kata yang sopan, dengarkan temanmu, dan saling membantu agar pekerjaan terasa ringan.",
+        videoClipUrl: "https://www.w3schools.com/html/mov_bbb.mp4",
+      },
+      {
+        id: "tg-kk-5",
+        order: 5,
+        emoji: "✂️",
+        textSimple: "Belajar Keterampilan & Berani Mencoba",
+        textCaption: "Belajar keterampilan baru (menggunting, mewarnai, mengemas). Jangan takut salah, coba lagi!",
+        audioNarration: "Ayo belajar memotong, mewarnai, menanam bunga, dan mengemas barang. Jika melakukan kesalahan, tidak apa-apa! Coba lagi dan jangan menyerah!",
+        videoClipUrl: "https://www.w3schools.com/html/mov_bbb.mp4",
+        activity: {
+          type: "catch_stars",
+          question: "Ayo tangkap bintang cita-citamu!",
+          starCount: 3
+        }
+      }
+    ]
   },
 
-  // ═══════════════════ KETERAMPILAN SOSIAL ═══════════════════
   {
-    id: "lesson-sosial-1",
-    tema: "keterampilan-sosial",
-    title: "Cara Menyapa Teman",
-    description: "Belajar menyapa dan berkomunikasi dengan teman",
+    id: "lesson-perawatan-1-suara",
+    tema: "perawatan-diri",
+    mode: "suara",
+    title: "Keterampilan Merawat Diri (Tunanetra)",
+    description: "Menjaga kebersihan tubuh, gigi, rambut, kuku, tangan, pakaian, dan belajar mandiri.",
     steps: [
       {
-        id: "ks-1",
+        id: "tn-pd-1",
+        order: 1,
+        emoji: "🛀",
+        textSimple: "Mengenal Merawat Diri",
+        textCaption: "Menjaga kebersihan, kesehatan, dan kerapian diri secara teratur sebagai bentuk rasa sayang kepada diri sendiri.",
+        audioNarration: "Merawat diri adalah kegiatan menjaga kebersihan dan kesehatan tubuh kita. Tubuh bersih membuat kita sehat, nyaman, dan percaya diri.",
+        tactileGuidance: "Buka halaman 1 buku fisik CareLife. Raba bentuk hati timbul di tengah halaman sebagai simbol rasa sayang kepada diri sendiri.",
+      },
+      {
+        id: "tn-pd-2",
+        order: 2,
+        emoji: "🚿",
+        textSimple: "Langkah Mandi yang Benar",
+        textCaption: "Basahi seluruh tubuh ➡️ gunakan sabun merata ➡️ bilas air mengalir ➡️ keringkan tubuh dengan handuk.",
+        audioNarration: "Mandilah secara teratur pagi dan sore. Basahi tubuh, gosok seluruh badan dengan sabun, bilas sampai bersih, lalu lap dengan handuk kering.",
+        tactileGuidance: "Di halaman 2, raba garis-garis halus vertikal di sisi kiri yang melambangkan air mengalir dari shower.",
+      },
+      {
+        id: "tn-pd-3",
+        order: 3,
+        emoji: "🪥",
+        textSimple: "Menyikat Gigi Teratur",
+        textCaption: "Menyikat gigi dua kali sehari (setelah sarapan & sebelum tidur) agar gigi sehat dan mulut segar.",
+        audioNarration: "Sikat gigimu setelah makan pagi dan sebelum tidur. Sikat bagian depan, samping, belakang gigi, dan bersihkan lidah, lalu berkumurlah.",
+        tactileGuidance: "Di halaman 3, temukan bentuk sikat gigi timbul dengan bulu sikat bertekstur kasar.",
+      },
+      {
+        id: "tn-pd-4",
+        order: 4,
+        emoji: "🧼",
+        textSimple: "Menjaga Kebersihan Rambut",
+        textCaption: "Keramas teratur menggunakan sampo, pijat kulit kepala lembut, bilas bersih, dan rapikan rambut.",
+        audioNarration: "Cucilah rambutmu dengan sampo secara teratur. Pijat kulit kepala secara lembut, bilas bersih, lalu lap dengan handuk.",
+        tactileGuidance: "Di halaman 4, raba bentuk gelembung-gelembung timbul kecil di bagian atas yang melambangkan busa sampo.",
+      },
+      {
+        id: "tn-pd-5",
+        order: 5,
+        emoji: "🤲",
+        textSimple: "Kebersihan Tangan dan Kuku",
+        textCaption: "Cuci tangan pakai sabun sebelum makan/dari toilet. Potong kuku secara teratur agar terhindar kuman.",
+        audioNarration: "Tangan mudah kotor. Basahi tangan, gunakan sabun, gosok telapak tangan, punggung tangan, sela jari, bilas dan keringkan. Potong kuku secara teratur.",
+        tactileGuidance: "Di halaman 5, temukan bentuk dua telapak tangan timbul yang saling berhadapan.",
+      },
+      {
+        id: "tn-pd-6",
+        order: 6,
+        emoji: "👕",
+        textSimple: "Memakai Pakaian Bersih & Rapi",
+        textCaption: "Ganti pakaian bersih setiap hari, letakkan baju kotor di tempatnya, dan simpan pakaian rapi di lemari.",
+        audioNarration: "Pakailah pakaian bersih setiap selesai mandi agar nyaman. Letakkan baju kotor di keranjang dan simpan baju bersih di lemari.",
+        tactileGuidance: "Di halaman 6, raba bentuk kerah baju timbul di bagian tengah halaman.",
+      }
+    ]
+  },
+  {
+    id: "lesson-perlindungan-1-suara",
+    tema: "perlindungan-diri",
+    mode: "suara",
+    title: "Perlindungan Diri (Tunanetra)",
+    description: "Mengenali hak keamanan, perbedaan sentuhan aman/tidak aman, berani menolak, dan mencari bantuan.",
+    steps: [
+      {
+        id: "tn-pld-1",
+        order: 1,
+        emoji: "🛡️",
+        textSimple: "Mengenal Hak Keamanan & Tubuh Berharga",
+        textCaption: "Setiap anak berhak aman. Bagian tubuh pribadi (ditutup pakaian dalam) tidak boleh disentuh orang lain.",
+        audioNarration: "Tubuhmu berharga dan kamu berhak hidup aman. Bagian tubuh yang ditutup pakaian dalam adalah area pribadi yang tidak boleh dilihat atau disentuh orang lain.",
+        tactileGuidance: "Raba halaman 7 buku fisik CareLife. Temukan garis tepi tebal yang melambangkan batas pelindung tubuhmu.",
+      },
+      {
+        id: "tn-pld-2",
+        order: 2,
+        emoji: "🙅‍♂️",
+        textSimple: "Mengenal Sentuhan Aman & Tidak Aman",
+        textCaption: "Sentuhan aman: membantu menjaga. Sentuhan tidak aman: membuat takut, malu, atau menyentuh area pribadi.",
+        audioNarration: "Sentuhan aman adalah sentuhan baik yang membantu kita. Sentuhan tidak aman membuat kita tidak nyaman. Ingat, kamu berhak menolak sentuhan tidak aman.",
+        tactileGuidance: "Di halaman 8, temukan simbol lingkaran timbul halus untuk sentuhan aman, dan simbol silang (X) kasar untuk tidak aman.",
+      },
+      {
+        id: "tn-pld-3",
+        order: 3,
+        emoji: "🗣️",
+        textSimple: "Berani Mengatakan Tidak",
+        textCaption: "Katakan 'TIDAK' atau 'Tidak, saya tidak mau' jika ada orang asing memaksa atau mengajak pergi tanpa izin.",
+        audioNarration: "Mengatakan tidak adalah cara menjaga diri. Katakan dengan tegas: Tidak, saya tidak mau! jika merasa terancam, lalu segera menjauh.",
+        tactileGuidance: "Di halaman 9, temukan bentuk tanda seru (!) besar yang menonjol tegas di tengah halaman.",
+      },
+      {
+        id: "tn-pld-4",
+        order: 4,
+        emoji: "👨‍👩‍👧‍👦",
+        textSimple: "Langkah Penyelamatan Diri",
+        textCaption: "Saat terancam: BERHENTI ➡️ MENJAUH ke tempat aman ➡️ BERSUARA panggil bantuan ➡️ BERCERITA ke Ayah/Ibu/Guru.",
+        audioNarration: "Jika merasa terancam, lakukan empat langkah: Berhenti, Menjauh ke dekat orang dewasa, Bersuara panggil bantuan, dan Bercerita sejujurnya kepada Ayah, Ibu, atau Guru.",
+        tactileGuidance: "Di halaman 10, raba bentuk timbul menyerupai rumah hangat yang melambangkan tempat perlindungan aman.",
+      }
+    ]
+  },
+  {
+    id: "lesson-sosial-1-suara",
+    tema: "keterampilan-sosial",
+    mode: "suara",
+    title: "Keterampilan Sosial (Tunanetra)",
+    description: "Belajar menyapa ramah, mendengarkan, memperkenalkan diri, berteman, kerja sama, dan meminta tolong.",
+    steps: [
+      {
+        id: "tn-ks-1",
         order: 1,
         emoji: "👋",
-        textSimple: "Lambaikan tangan",
-        textCaption: "Lambaikan tanganmu dan tersenyum saat bertemu teman",
-        audioNarration: "Saat bertemu teman, lambaikan tanganmu dan tersenyum. Itu cara menyapa yang ramah!",
-        tactileGuidance: "Raba bentuk tangan timbul yang sedang menyapa di bagian atas halaman 10.",
-        videoClipUrl: "https://www.w3schools.com/html/mov_bbb.mp4",
+        textSimple: "Menyapa Orang Lain dengan Ramah",
+        textCaption: "Katakan salam seperti 'Selamat pagi' dengan sopan untuk memulai interaksi dan berteman.",
+        audioNarration: "Menyapa adalah cara memulai pertemanan yang ramah. Ucapkan salam dengan suara sopan saat bertemu guru atau teman.",
+        tactileGuidance: "Buka halaman 11. Raba bentuk tangan timbul melambangkan lambaian sapaan ramah.",
       },
       {
-        id: "ks-2",
+        id: "tn-ks-2",
         order: 2,
-        emoji: "😊",
-        textSimple: "Ucapkan halo",
-        textCaption: "Ucapkan 'Halo!' atau 'Selamat pagi!' dengan ramah",
-        audioNarration: "Ucapkan halo atau selamat pagi dengan suara yang ramah dan ceria.",
-        tactileGuidance: "Raba bentuk melengkung senyum yang timbul dan mulus di halaman 11.",
-        videoClipUrl: "https://www.w3schools.com/html/mov_bbb.mp4",
-        quiz: {
-          question: "Bagaimana cara menyapa teman?",
-          options: [
-            { emoji: "👋", label: "Lambaikan tangan", isCorrect: true },
-            { emoji: "😠", label: "Membentak", isCorrect: false },
-          ],
-        },
+        emoji: "👂",
+        textSimple: "Mendengarkan Saat Orang Lain Berbicara",
+        textCaption: "Hargai teman: tidak memotong pembicaraan, dengarkan isi obrolan, dan berikan tanggapan sesuai.",
+        audioNarration: "Menjadi pendengar yang baik adalah bentuk rasa hormat. Tunggu teman selesai bicara sebelum kamu menanggapinya.",
+        tactileGuidance: "Di halaman 12, temukan bentuk daun telinga timbul di sisi kanan halaman.",
       },
       {
-        id: "ks-3",
+        id: "tn-ks-3",
         order: 3,
-        emoji: "🤝",
-        textSimple: "Ajak bermain",
-        textCaption: "Ajak temanmu bermain bersama dengan sopan",
-        audioNarration: "Setelah menyapa, ajaklah temanmu bermain bersama. Katakan: Mau main bareng?",
-        tactileGuidance: "Temukan bentuk dua tangan saling bersalaman yang timbul di tengah halaman 12.",
-        videoClipUrl: "https://www.w3schools.com/html/mov_bbb.mp4",
+        emoji: "😊",
+        textSimple: "Memperkenalkan Diri & Berteman",
+        textCaption: "Sebutkan namamu dengan ramah. Berteman dengan jujur, sopan, mau berbagi, dan peduli.",
+        audioNarration: "Perkenalkan namamu dengan ramah agar teman mengenalmu. Jadilah teman yang baik dengan jujur dan peduli.",
+        tactileGuidance: "Di halaman 13, temukan bentuk kotak timbul mulus di tengah tempat menempelkan kartu nama.",
       },
       {
-        id: "ks-4",
+        id: "tn-ks-4",
         order: 4,
-        emoji: "🎭",
-        textSimple: "Berbagi mainan",
-        textCaption: "Berbagi mainan dengan teman itu menyenangkan",
-        audioNarration: "Berbagi mainan dengan teman membuat permainan lebih menyenangkan. Kamu anak yang baik!",
-        tactileGuidance: "Raba dua bentuk kotak mainan balok timbul di halaman 13.",
-        videoClipUrl: "https://www.w3schools.com/html/mov_bbb.mp4",
-        quiz: {
-          question: "Apa yang menyenangkan dengan teman?",
-          options: [
-            { emoji: "🤝", label: "Berbagi", isCorrect: true },
-            { emoji: "😤", label: "Berebut", isCorrect: false },
-          ],
-        },
-      },
-    ],
+        emoji: "🤝",
+        textSimple: "Bekerja Sama & Meminta Tolong",
+        textCaption: "Saling membantu, bekerja sama dalam kelompok. Ucapkan 'Tolong' saat butuh dan 'Terima kasih' setelahnya.",
+        audioNarration: "Bekerja sama membuat pekerjaan lebih mudah. Mintalah tolong dengan sopan, dan jangan lupa ucapkan terima kasih setelah dibantu.",
+        tactileGuidance: "Di halaman 14, raba dua bentuk tangan timbul yang saling menggenggam atau menjabat erat.",
+      }
+    ]
   },
-
-  // ═══════════════════ KESIAPAN KARIR ═══════════════════
   {
-    id: "lesson-karir-1",
+    id: "lesson-karir-1-suara",
     tema: "kesiapan-karir",
-    title: "Mengenal Pekerjaan",
-    description: "Eksplorasi berbagai jenis pekerjaan di sekitar kita",
+    mode: "suara",
+    title: "Kesiapan Karir (Tunanetra)",
+    description: "Mempersiapkan masa depan, mengenal minat bakat, disiplin bertanggung jawab, dan percaya diri.",
     steps: [
       {
-        id: "kk-1",
+        id: "tn-kk-1",
         order: 1,
-        emoji: "👨‍⚕️",
-        textSimple: "Dokter menolong",
-        textCaption: "Dokter adalah orang yang menolong orang sakit agar sembuh",
-        audioNarration: "Tahukah kamu? Dokter adalah orang yang menolong orang sakit agar sembuh kembali. Dokter bekerja di rumah sakit.",
-        tactileGuidance: "Raba simbol palang merah timbul yang khas di halaman 14.",
-        videoClipUrl: "https://www.w3schools.com/html/mov_bbb.mp4",
-      },
-      {
-        id: "kk-2",
-        order: 2,
-        emoji: "👩‍🏫",
-        textSimple: "Guru mengajar",
-        textCaption: "Guru mengajarkan banyak hal baik kepada murid-muridnya",
-        audioNarration: "Guru adalah orang yang mengajarkan banyak hal baik. Guru bekerja di sekolah dan sangat sayang dengan muridnya.",
-        tactileGuidance: "Raba bingkai papan tulis persegi panjang yang menonjol di halaman 15.",
-        videoClipUrl: "https://www.w3schools.com/html/mov_bbb.mp4",
-        quiz: {
-          question: "Siapa yang mengajar di sekolah?",
-          options: [
-            { emoji: "👩‍🏫", label: "Guru", isCorrect: true },
-            { emoji: "👨‍🍳", label: "Koki", isCorrect: false },
-          ],
-        },
-      },
-      {
-        id: "kk-3",
-        order: 3,
-        emoji: "👨‍🍳",
-        textSimple: "Koki memasak",
-        textCaption: "Koki memasak makanan yang lezat untuk banyak orang",
-        audioNarration: "Koki adalah orang yang memasak makanan lezat. Koki bekerja di restoran atau hotel.",
-        tactileGuidance: "Temukan bentuk topi koki melengkung tinggi yang timbul di halaman 16.",
-        videoClipUrl: "https://www.w3schools.com/html/mov_bbb.mp4",
-      },
-      {
-        id: "kk-4",
-        order: 4,
         emoji: "🌟",
-        textSimple: "Kamu bisa jadi apa saja!",
-        textCaption: "Kamu bisa menjadi apa saja yang kamu mau jika rajin belajar",
-        audioNarration: "Kamu bisa menjadi apa saja yang kamu mau! Yang penting, rajin belajar dan jangan pernah menyerah. Kamu hebat!",
-        tactileGuidance: "Raba bentuk bintang timbul yang bersudut lima di halaman 17.",
-        videoClipUrl: "https://www.w3schools.com/html/mov_bbb.mp4",
-        quiz: {
-          question: "Apa yang penting supaya bisa jadi hebat?",
-          options: [
-            { emoji: "📚", label: "Rajin belajar", isCorrect: true },
-            { emoji: "😴", label: "Malas-malasan", isCorrect: false },
-          ],
-        },
+        textSimple: "Mengenal Minat dan Bakat",
+        textCaption: "Cari tahu hal yang disukai (bicara, musik, kerajinan) untuk dikembangkan menjadi potensi masa depan.",
+        audioNarration: "Masa depan indah dimulai dengan mengenal dirimu. Temukan apa yang kamu sukai, seperti musik atau wirausaha, lalu latih bakatmu.",
+        tactileGuidance: "Buka halaman 15. Raba bentuk bintang bersudut lima yang timbul melambangkan cita-cita.",
       },
-    ],
-  },
+      {
+        id: "tn-kk-2",
+        order: 2,
+        emoji: "💼",
+        textSimple: "Mengenal Dunia Kerja",
+        textCaption: "Ada banyak profesi: Pendidikan (guru/dosen), Seni (musisi/pengisi suara), Wirausaha (usaha kerajinan/kuliner).",
+        audioNarration: "Ada banyak pekerjaan hebat: guru yang mengajar, musisi yang menghibur, atau wirausaha mandiri. Semua bisa diraih.",
+        tactileGuidance: "Di halaman 16, raba bentuk timbul menyerupai tas koper kerja di bagian bawah halaman.",
+      },
+      {
+        id: "tn-kk-3",
+        order: 3,
+        emoji: "⏰",
+        textSimple: "Belajar Bertanggung Jawab & Disiplin",
+        textCaption: "Biasakan datang tepat waktu, menyelesaikan tugas, menjaga kerapian, dan tidak mudah menyerah.",
+        audioNarration: "Disiplin dan tanggung jawab adalah bekal kerja yang penting. Datanglah tepat waktu dan selesaikan tugasmu dengan baik.",
+        tactileGuidance: "Di halaman 17, temukan bentuk lingkaran jam dinding timbul dengan jarum jam menunjuk angka 12.",
+      },
+      {
+        id: "tn-kk-4",
+        order: 4,
+        emoji: "🗣️",
+        textSimple: "Komunikasi & Percaya Diri",
+        textCaption: "Berani mencoba hal baru, berkomunikasi dengan santun, dan hargai pencapaian kecil diri sendiri.",
+        audioNarration: "Berkomunikasilah dengan sopan. Percayalah pada dirimu sendiri bahwa kamu mampu belajar dan berani mencoba hal baru.",
+        tactileGuidance: "Di halaman 18, raba tekstur garis melengkung bergelombang timbul melambangkan suara yang terpancar.",
+      }
+    ]
+  }
 ];
 
-// ── Helper Functions ──
 
-export function getLessonByTema(tema: Tema): LessonContent | undefined {
-  return LESSON_CONTENT.find((l) => l.tema === tema);
+
+export function getLessonByTema(tema: Tema, mode: Mode): LessonContent | undefined {
+  return LESSON_CONTENT.find((l) => l.tema === tema && l.mode === mode);
 }
 
-// Legacy compat – keep VIDEO_CONTENT for any old references
 export const VIDEO_CONTENT: VideoContent[] = [
   {
     id: "1",

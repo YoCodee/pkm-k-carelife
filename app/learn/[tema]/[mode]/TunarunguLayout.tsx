@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import type { LessonContent, Mode, Tema } from "@/lib/content";
 import JBIOverlay from "@/components/accessibility/JBIOverlay";
 import StepByStepCards from "@/components/accessibility/StepByStepCards";
-
+import { usePrefersReducedMotion } from "@/lib/hooks/usePrefersReducedMotion";
 import { playSFX, triggerHaptic } from "@/lib/sfx";
 
 interface Props {
@@ -17,12 +17,13 @@ interface Props {
 }
 
 export default function TunarunguLayout({ lesson, tema, mode }: Props) {
+  const prefersReducedMotion = usePrefersReducedMotion();
   const [currentStep, setCurrentStep] = useState(0);
   const [isFinished, setIsFinished] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
 
   const totalSteps = lesson.steps.length;
-  const step = lesson.steps[currentStep];
+  const step = lesson.steps[currentStep] || lesson.steps[0];
 
   const goNext = () => {
     if (currentStep < totalSteps - 1) {
@@ -36,13 +37,17 @@ export default function TunarunguLayout({ lesson, tema, mode }: Props) {
 
       // Simpan progres ke localStorage secara offline
       try {
-        const completed = JSON.parse(localStorage.getItem("carelife-completed") || "[]");
+        const completed = JSON.parse(
+          localStorage.getItem("carelife-completed") || "[]",
+        );
         if (!completed.includes(lesson.id)) {
           completed.push(lesson.id);
           localStorage.setItem("carelife-completed", JSON.stringify(completed));
         }
-        
-        const starsMap = JSON.parse(localStorage.getItem("carelife-stars") || "{}");
+
+        const starsMap = JSON.parse(
+          localStorage.getItem("carelife-stars") || "{}",
+        );
         starsMap[lesson.id] = 3; // Tunarungu default 3 bintang setelah tamat
         localStorage.setItem("carelife-stars", JSON.stringify(starsMap));
       } catch (err) {
@@ -68,7 +73,7 @@ export default function TunarunguLayout({ lesson, tema, mode }: Props) {
 
   if (isFinished) {
     return (
-      <div className="min-h-screen bg-[#F8F9FA]">
+      <div className="min-h-screen bg-[#F8F9FA] overflow-x-hidden w-full">
         <header className="px-6 pt-8 pb-4">
           <div className="max-w-[700px] mx-auto">
             <Link
@@ -82,20 +87,23 @@ export default function TunarunguLayout({ lesson, tema, mode }: Props) {
         </header>
         <div className="px-6 py-8 max-w-[700px] mx-auto">
           <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
+            initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, scale: 0.9 }}
+            animate={prefersReducedMotion ? { opacity: 1 } : { opacity: 1, scale: 1 }}
             className="bg-white rounded-[32px] border-2 border-[#1A1A1A] p-8 text-center shadow-[4px_4px_0_#1A1A1A]"
           >
             <motion.div
-              animate={{ y: [0, -10, 0] }}
-              transition={{ repeat: Infinity, duration: 1.5 }}
+              animate={prefersReducedMotion ? {} : { y: [0, -10, 0] }}
+              transition={prefersReducedMotion ? {} : { repeat: Infinity, duration: 1.5 }}
               className="text-8xl mb-4"
             >
               🎉
             </motion.div>
-            <h2 className="text-3xl font-black text-[#1A1A1A] mb-2">Hebat Sekali!</h2>
+            <h2 className="text-3xl font-black text-[#1A1A1A] mb-2">
+              Hebat Sekali!
+            </h2>
             <p className="text-base font-bold text-[#6B7280] mb-6">
-              Kamu sudah menyelesaikan semua {totalSteps} langkah materi {lesson.title}! 🤟
+              Kamu sudah menyelesaikan semua {totalSteps} langkah materi{" "}
+              {lesson.title}! 🤟
             </p>
 
             <div className="flex flex-col gap-3">
@@ -120,7 +128,7 @@ export default function TunarunguLayout({ lesson, tema, mode }: Props) {
   }
 
   return (
-    <div className="min-h-screen bg-[#F8F9FA]">
+    <div className="min-h-screen bg-[#F8F9FA] overflow-x-hidden w-full">
       <header className="px-6 pt-8 pb-4">
         <div className="max-w-[700px] mx-auto">
           <Link
@@ -131,14 +139,17 @@ export default function TunarunguLayout({ lesson, tema, mode }: Props) {
             Kembali
           </Link>
           <div className="text-center">
-            <span className="cl-tag cl-tag-pink mb-2">🤟 Mode Tunarungu — Visual</span>
-            <h1 className="text-2xl md:text-3xl font-black text-[#1A1A1A] mt-2">{lesson.title}</h1>
+            <span className="cl-tag cl-tag-pink mb-2">
+              🤟 Mode Tunarungu — Visual
+            </span>
+            <h1 className="text-2xl md:text-3xl font-black text-[#1A1A1A] mt-2">
+              {lesson.title}
+            </h1>
           </div>
         </div>
       </header>
 
       <div className="px-6 py-4 max-w-[700px] mx-auto space-y-5">
-
         <div className="flex items-center justify-center gap-2">
           {lesson.steps.map((_, i) => (
             <div
@@ -157,10 +168,10 @@ export default function TunarunguLayout({ lesson, tema, mode }: Props) {
         <AnimatePresence mode="wait">
           <motion.div
             key={`step-${currentStep}`}
-            initial={{ opacity: 0, x: 30 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -30 }}
-            className="space-y-5"
+            initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: 30 }}
+            animate={prefersReducedMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
+            exit={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: -30 }}
+            className="space-y-5 w-full"
           >
             <div className="relative bg-[#1A2835] rounded-[28px] overflow-hidden aspect-video border-2 border-[#1A1A1A] shadow-[4px_4px_0_#1A1A1A]">
               {step.videoClipUrl && (
@@ -178,21 +189,23 @@ export default function TunarunguLayout({ lesson, tema, mode }: Props) {
 
               <div className="absolute top-4 left-4 bg-[#FFB6B6] rounded-full p-2 flex items-center gap-2 border-2 border-[#1A1A1A]">
                 <VolumeX size={16} className="text-[#1A1A1A]" />
-                <span className="text-[10px] font-bold text-[#1A1A1A] pr-1">Tanpa Suara</span>
+                <span className="text-[10px] font-bold text-[#1A1A1A] pr-1">
+                  Tanpa Suara
+                </span>
               </div>
 
               <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-5 pt-10">
                 <motion.p
                   key={step.textCaption}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
+                  initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: 10 }}
+                  animate={prefersReducedMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
                   className="text-white text-lg md:text-xl font-black text-center leading-relaxed"
                 >
                   {step.textCaption}
                 </motion.p>
               </div>
 
-              <JBIOverlay caption={step.textCaption} />
+              <JBIOverlay caption={step.textCaption} jbiVideoUrl={step.jbiVideoUrl} primaryVideoRef={videoRef} />
             </div>
 
             <div className="bg-white rounded-[28px] border-2 border-[#1A1A1A] p-6 text-center shadow-[4px_4px_0_#1A1A1A]">
@@ -202,8 +215,12 @@ export default function TunarunguLayout({ lesson, tema, mode }: Props) {
                 </div>
                 <span className="text-5xl">{step.emoji}</span>
               </div>
-              <h2 className="text-xl font-black text-[#1A1A1A] mb-1">{step.textSimple}</h2>
-              <p className="text-sm font-bold text-[#6B7280]">{step.textCaption}</p>
+              <h2 className="text-xl font-black text-[#1A1A1A] mb-1">
+                {step.textSimple}
+              </h2>
+              <p className="text-sm font-bold text-[#6B7280]">
+                {step.textCaption}
+              </p>
             </div>
 
             <div className="bg-white rounded-[28px] border-2 border-[#1A1A1A] p-5 shadow-[2px_2px_0_#1A1A1A]">

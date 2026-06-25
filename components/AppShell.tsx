@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useCallback, createContext } from "react";
+import { useState, useCallback, createContext, useEffect } from "react";
 import SplashScreen from "@/components/SplashScreen";
 import IntroPage1 from "@/components/IntroPage1";
 import BottomNav from "@/components/layout/BottomNav";
 import AccessibilityPanel from "@/components/accessibility/AccessibilityPanel";
+import { useFocusOnNavigation } from "@/lib/hooks/useFocusOnNavigation";
 
 export type AppPhase = "splash" | "intro" | "app";
 
@@ -12,6 +13,36 @@ export const AppPhaseContext = createContext<AppPhase>("splash");
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const [phase, setPhase] = useState<AppPhase>("splash");
+
+  // Reset focus on navigation
+  useFocusOnNavigation();
+
+  useEffect(() => {
+    if (process.env.NODE_ENV === "production") {
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker
+          .register("/sw.js")
+          .then((reg) =>
+            console.log("Service Worker registered scope:", reg.scope),
+          )
+          .catch((err) =>
+            console.error("Service Worker registration failed:", err),
+          );
+      }
+    } else {
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.getRegistrations().then((registrations) => {
+          for (const registration of registrations) {
+            registration.unregister().then((success) => {
+              if (success) {
+                console.log("[Service Worker] Unregistered active worker for development mode");
+              }
+            });
+          }
+        });
+      }
+    }
+  }, []);
 
   const handleSplashFinish = useCallback(() => {
     setPhase("intro");
@@ -41,11 +72,11 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             ${phase !== "app" ? "opacity-0 pointer-events-none" : "opacity-100"}
           `}
         >
-          <main className="flex-1 pb-28">{children}</main>
+          <main id="main-content" className="flex-1 pb-28">{children}</main>
           <AccessibilityPanel />
           <BottomNav />
         </div>
-      </AppPhaseContext.Provider>
+      </AppPhaseContext.Provider>  
     </>
   );
 }

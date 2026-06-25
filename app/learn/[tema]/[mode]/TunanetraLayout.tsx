@@ -5,6 +5,8 @@ import Link from "next/link";
 import { ArrowLeft, Home } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { LessonContent, Mode, Tema } from "@/lib/content";
+import { usePrefersReducedMotion } from "@/lib/hooks/usePrefersReducedMotion";
+import { useSpeechSynthesisSSR } from "@/lib/hooks/useSpeechSynthesisSSR";
 import { playSFX, triggerHaptic } from "@/lib/sfx";
 
 interface Props {
@@ -25,15 +27,19 @@ interface Props {
  * - Visual elements exist only for the caretaker/teacher watching
  */
 export default function TunanetraLayout({ lesson, tema, mode }: Props) {
+  const prefersReducedMotion = usePrefersReducedMotion();
   const [currentStep, setCurrentStep] = useState(-1); // -1 = intro
   const [isFinished, setIsFinished] = useState(false);
-  const [isSpeaking, setIsSpeaking] = useState(false);
   const [gestureHint, setGestureHint] = useState("");
   const [isAudioUnlocked, setIsAudioUnlocked] = useState(false);
-  const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+
+  const { isSpeaking, speak, stop: stopSpeaking } = useSpeechSynthesisSSR();
 
   const totalSteps = lesson.steps.length;
-  const step = currentStep >= 0 && currentStep < totalSteps ? lesson.steps[currentStep] : null;
+  const step =
+    currentStep >= 0 && currentStep < totalSteps
+      ? lesson.steps[currentStep]
+      : null;
 
   // Pointer tracking for gestures
   const pointerStartX = useRef(0);
@@ -41,56 +47,7 @@ export default function TunanetraLayout({ lesson, tema, mode }: Props) {
   const tapTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const speakTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // ── Core Speech Function ──
-  const speak = useCallback((text: string, onDone?: () => void) => {
-    if (!("speechSynthesis" in window)) return;
-    speechSynthesis.cancel();
-
-    const utterance = new SpeechSynthesisUtterance(text);
-    utteranceRef.current = utterance; // Simpan di ref agar tidak di-garbage collect HP
-    utterance.lang = "id-ID";
-
-    // Cari daftar suara Bahasa Indonesia yang tersedia di browser/perangkat
-    const voices = speechSynthesis.getVoices();
-    const idVoices = voices.filter(
-      (v) => v.lang.toLowerCase().startsWith("id") || v.lang.toLowerCase() === "id-id"
-    );
-
-    // Prioritaskan suara "Natural/Online" (Edge/Chrome), lalu suara MacOS (Damayanti), 
-    // lalu Google TTS, lalu fallback ke suara Indonesia pertama yang tersedia
-    const bestVoice = idVoices.find((v) => 
-      v.name.toLowerCase().includes("natural") || 
-      v.name.toLowerCase().includes("online") || 
-      v.name.toLowerCase().includes("neural")
-    ) || idVoices.find((v) => 
-      v.name.toLowerCase().includes("damayanti")
-    ) || idVoices.find((v) => 
-      v.name.toLowerCase().includes("google")
-    ) || idVoices[0];
-
-    if (bestVoice) {
-      utterance.voice = bestVoice;
-    }
-
-    utterance.rate = 0.85;
-    utterance.pitch = 1.1;
-    utterance.onstart = () => setIsSpeaking(true);
-    utterance.onend = () => {
-      setIsSpeaking(false);
-      utteranceRef.current = null;
-      onDone?.();
-    };
-
-    speechSynthesis.speak(utterance);
-  }, []);
-
-  const stopSpeaking = useCallback(() => {
-    if ("speechSynthesis" in window) {
-      speechSynthesis.cancel();
-      utteranceRef.current = null;
-      setIsSpeaking(false);
-    }
-  }, []);
+  // Speech synthesis functions are managed by useSpeechSynthesisSSR hook
 
   // ── Navigation ──
   const goNext = useCallback(() => {
@@ -106,12 +63,16 @@ export default function TunanetraLayout({ lesson, tema, mode }: Props) {
 
       // Simpan progres ke localStorage secara offline
       try {
-        const completed = JSON.parse(localStorage.getItem("carelife-completed") || "[]");
+        const completed = JSON.parse(
+          localStorage.getItem("carelife-completed") || "[]",
+        );
         if (!completed.includes(lesson.id)) {
           completed.push(lesson.id);
           localStorage.setItem("carelife-completed", JSON.stringify(completed));
         }
-        const starsMap = JSON.parse(localStorage.getItem("carelife-stars") || "{}");
+        const starsMap = JSON.parse(
+          localStorage.getItem("carelife-stars") || "{}",
+        );
         starsMap[lesson.id] = 3; // Mode tunanetra otomatis 3 bintang setelah tamat
         localStorage.setItem("carelife-stars", JSON.stringify(starsMap));
       } catch (err) {
@@ -170,7 +131,9 @@ export default function TunanetraLayout({ lesson, tema, mode }: Props) {
         const finishText = `Selamat! Kamu sudah selesai belajar ${lesson.title}. Kamu hebat sekali! Ketuk layar untuk kembali ke menu, atau geser kiri untuk mengulang langkah terakhir.`;
         speak(finishText);
       } else if (step) {
-        const tactileText = step.tactileGuidance ? ` Panduan meraba buku: ${step.tactileGuidance}.` : "";
+        const tactileText = step.tactileGuidance
+          ? ` Panduan meraba buku: ${step.tactileGuidance}.`
+          : "";
         const stepText = `Langkah ${currentStep + 1} dari ${totalSteps}. ${step.audioNarration}.${tactileText} Ketuk layar untuk lanjut.`;
         speak(stepText);
       }
@@ -181,7 +144,17 @@ export default function TunanetraLayout({ lesson, tema, mode }: Props) {
       if (tapTimeoutRef.current) clearTimeout(tapTimeoutRef.current);
       stopSpeaking();
     };
-  }, [currentStep, isFinished, lesson.title, lesson.description, totalSteps, step, speak, stopSpeaking, isAudioUnlocked]); // added dependencies
+  }, [
+    currentStep,
+    isFinished,
+    lesson.title,
+    lesson.description,
+    totalSteps,
+    step,
+    speak,
+    stopSpeaking,
+    isAudioUnlocked,
+  ]); // added dependencies
 
   // ── Pointer Gesture Handling ──
   const handlePointerDown = (e: React.PointerEvent) => {
@@ -189,7 +162,10 @@ export default function TunanetraLayout({ lesson, tema, mode }: Props) {
     if (e.button !== 0) return;
 
     // Ignore if clicked on a link or button
-    if ((e.target as HTMLElement).closest("a") || (e.target as HTMLElement).closest("button")) {
+    if (
+      (e.target as HTMLElement).closest("a") ||
+      (e.target as HTMLElement).closest("button")
+    ) {
       return;
     }
 
@@ -199,7 +175,10 @@ export default function TunanetraLayout({ lesson, tema, mode }: Props) {
 
   const handlePointerUp = (e: React.PointerEvent) => {
     if (e.button !== 0) return;
-    if ((e.target as HTMLElement).closest("a") || (e.target as HTMLElement).closest("button")) {
+    if (
+      (e.target as HTMLElement).closest("a") ||
+      (e.target as HTMLElement).closest("button")
+    ) {
       return;
     }
 
@@ -212,7 +191,7 @@ export default function TunanetraLayout({ lesson, tema, mode }: Props) {
       }
       playSFX("click");
       triggerHaptic("click");
-      
+
       const introText = `Selamat datang di materi ${lesson.title}. ${lesson.description}. Ada ${totalSteps} langkah. Ketuk layar untuk mulai. Geser ke kiri untuk kembali. Ketuk dua kali untuk mengulang.`;
       speak(introText);
       return;
@@ -221,7 +200,10 @@ export default function TunanetraLayout({ lesson, tema, mode }: Props) {
     const deltaX = e.clientX - pointerStartX.current;
     const deltaY = e.clientY - pointerStartY.current;
 
-    const isHorizontalSwipe = Math.abs(deltaX) > 60 && Math.abs(deltaX) > Math.abs(deltaY);
+    const absX = Math.abs(deltaX);
+    const absY = Math.abs(deltaY);
+
+    const isHorizontalSwipe = absX > 40 && absX > absY;
 
     if (isHorizontalSwipe) {
       if (deltaX > 0) {
@@ -237,6 +219,11 @@ export default function TunanetraLayout({ lesson, tema, mode }: Props) {
         showGesture("⬅️ Kembali");
         goPrev();
       }
+      return;
+    }
+
+    // Cancel tap detection if user dragged finger significantly (intended swipe or scroll)
+    if (absX > 20 || absY > 20) {
       return;
     }
 
@@ -323,6 +310,7 @@ export default function TunanetraLayout({ lesson, tema, mode }: Props) {
   return (
     <div
       className="min-h-screen bg-[#F8F9FA] text-[#1A1A1A] select-none flex flex-col"
+      style={{ touchAction: "none" }}
       onPointerDown={handlePointerDown}
       onPointerUp={handlePointerUp}
       role="application"
@@ -332,9 +320,9 @@ export default function TunanetraLayout({ lesson, tema, mode }: Props) {
       <AnimatePresence>
         {gestureHint && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}
+            initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, scale: 0.8 }}
+            animate={prefersReducedMotion ? { opacity: 1 } : { opacity: 1, scale: 1 }}
+            exit={{ opacity: 0 }}
             className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none"
           >
             <div className="bg-[#1A1A1A] rounded-[32px] px-12 py-8 border-4 border-[#1A1A1A] shadow-[4px_4px_0_#FFD700]">
@@ -355,8 +343,12 @@ export default function TunanetraLayout({ lesson, tema, mode }: Props) {
             Kembali
           </Link>
           <div className="text-center">
-            <span className="cl-tag cl-tag-blue mb-2">🎧 Mode Tunanetra — Suara</span>
-            <h1 className="text-2xl md:text-3xl font-black text-[#1A1A1A] mt-2">{lesson.title}</h1>
+            <span className="cl-tag cl-tag-blue mb-2">
+              🎧 Mode Tunanetra — Suara
+            </span>
+            <h1 className="text-2xl md:text-3xl font-black text-[#1A1A1A] mt-2">
+              {lesson.title}
+            </h1>
           </div>
         </div>
       </header>
@@ -364,7 +356,6 @@ export default function TunanetraLayout({ lesson, tema, mode }: Props) {
       {/* Main content — centered visual card */}
       <div className="flex-1 flex flex-col items-center justify-center px-6 py-4 max-w-[700px] mx-auto w-full">
         <AnimatePresence mode="wait">
-
           {/* ── INTRO ── */}
           {currentStep === -1 && !isFinished && (
             <motion.div
@@ -376,7 +367,11 @@ export default function TunanetraLayout({ lesson, tema, mode }: Props) {
             >
               <motion.div
                 animate={{ scale: [1, 1.12, 1] }}
-                transition={{ repeat: Infinity, duration: 2.5, ease: "easeInOut" }}
+                transition={{
+                  repeat: Infinity,
+                  duration: 2.5,
+                  ease: "easeInOut",
+                }}
                 className="text-8xl"
               >
                 🎧
@@ -384,7 +379,9 @@ export default function TunanetraLayout({ lesson, tema, mode }: Props) {
 
               <div>
                 <span className="cl-tag cl-tag-blue mb-2">Dunia Suara</span>
-                <h2 className="text-2xl font-black text-[#1A1A1A] mt-2">{lesson.title}</h2>
+                <h2 className="text-2xl font-black text-[#1A1A1A] mt-2">
+                  {lesson.title}
+                </h2>
                 <p className="text-[#6B7280] text-sm font-bold mt-1">
                   {totalSteps} langkah pembelajaran
                 </p>
@@ -434,12 +431,14 @@ export default function TunanetraLayout({ lesson, tema, mode }: Props) {
                     key={i}
                     animate={{
                       width: i === currentStep ? 32 : 10,
-                      backgroundColor: i === currentStep
-                        ? "#FFD700"
-                        : i < currentStep
-                          ? "#66B2B2"
-                          : "#FFFFFF",
+                      backgroundColor:
+                        i === currentStep
+                          ? "#FFD700"
+                          : i < currentStep
+                            ? "#66B2B2"
+                            : "#FFFFFF",
                     }}
+                    transition={prefersReducedMotion ? { duration: 0.1 } : undefined}
                     className="h-2.5 rounded-full border border-[#1A1A1A]"
                   />
                 ))}
@@ -451,9 +450,9 @@ export default function TunanetraLayout({ lesson, tema, mode }: Props) {
 
               {/* Big emoji */}
               <motion.div
-                initial={{ scale: 0, rotate: -90 }}
-                animate={{ scale: 1, rotate: 0 }}
-                transition={{ type: "spring", stiffness: 200 }}
+                initial={prefersReducedMotion ? { opacity: 0 } : { scale: 0, rotate: -90 }}
+                animate={prefersReducedMotion ? { opacity: 1 } : { scale: 1, rotate: 0 }}
+                transition={prefersReducedMotion ? { duration: 0.1 } : { type: "spring", stiffness: 200 }}
                 className="text-9xl"
               >
                 {step.emoji}
@@ -461,7 +460,9 @@ export default function TunanetraLayout({ lesson, tema, mode }: Props) {
 
               {/* Text */}
               <div>
-                <h2 className="text-2xl font-black text-[#1A1A1A]">{step.textSimple}</h2>
+                <h2 className="text-2xl font-black text-[#1A1A1A]">
+                  {step.textSimple}
+                </h2>
                 <p className="text-sm text-[#6B7280] font-bold mt-2 leading-relaxed">
                   {step.textCaption}
                 </p>
@@ -492,13 +493,13 @@ export default function TunanetraLayout({ lesson, tema, mode }: Props) {
           {isFinished && (
             <motion.div
               key="finish"
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
+              initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, scale: 0.9 }}
+              animate={prefersReducedMotion ? { opacity: 1 } : { opacity: 1, scale: 1 }}
               className="bg-white rounded-[32px] border-2 border-[#1A1A1A] p-8 text-center shadow-[4px_4px_0_#1A1A1A] space-y-6 max-w-[480px] w-full"
             >
               <motion.div
-                animate={{ rotate: [0, 15, -15, 0], scale: [1, 1.1, 1] }}
-                transition={{ repeat: Infinity, duration: 2 }}
+                animate={prefersReducedMotion ? {} : { rotate: [0, 15, -15, 0], scale: [1, 1.1, 1] }}
+                transition={prefersReducedMotion ? {} : { repeat: Infinity, duration: 2 }}
                 className="text-9xl"
               >
                 🎉
@@ -523,7 +524,6 @@ export default function TunanetraLayout({ lesson, tema, mode }: Props) {
               </div>
             </motion.div>
           )}
-
         </AnimatePresence>
       </div>
     </div>

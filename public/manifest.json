@@ -1,0 +1,25 @@
+{
+  "name": "CareLife",
+  "short_name": "CareLife",
+  "description": "Dunia Bermain dan Belajar yang Ramah, Aman, dan Seru untuk Anak Berkebutuhan Khusus",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F8F9FA",
+  "theme_color": "#FF6B35",
+  "orientation": "portrait",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/logo-carelife.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/logo-carelife.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
