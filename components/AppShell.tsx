@@ -6,7 +6,6 @@ import IntroPage1 from "@/components/IntroPage1";
 import BottomNav from "@/components/layout/BottomNav";
 import AccessibilityPanel from "@/components/accessibility/AccessibilityPanel";
 import { useFocusOnNavigation } from "@/lib/hooks/useFocusOnNavigation";
-import { isValidActivationCode } from "@/lib/activation";
 
 export type AppPhase = "splash" | "intro" | "app";
 
@@ -20,9 +19,39 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const [activationStatus, setActivationStatus] = useState<ActivationStatus>("loading");
   const [activationCode, setActivationCode] = useState("");
   const [activationError, setActivationError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Reset focus on navigation
   useFocusOnNavigation();
+
+  // Auto-migration: jika user sudah aktivasi sebelum Supabase dipasang,
+  // kirim kode mereka ke Supabase di background (tanpa ganggu UX)
+  useEffect(() => {
+    const activated = localStorage.getItem("carelife_activated");
+    const alreadyMigrated = localStorage.getItem("carelife_migrated");
+
+    if (activated === "true" && !alreadyMigrated) {
+      const usedCodesRaw = localStorage.getItem("carelife_used_codes");
+      const usedCodes: string[] = usedCodesRaw ? JSON.parse(usedCodesRaw) : [];
+      const lastCode = usedCodes[0];
+
+      if (lastCode) {
+        // Fire-and-forget: tidak perlu await, tidak perlu handle error
+        fetch("/api/activate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ code: lastCode }),
+        })
+          .catch(() => {/* silent fail — akan dicoba lagi kali berikutnya */})
+          .finally(() => {
+            localStorage.setItem("carelife_migrated", "true");
+          });
+      } else {
+        // Tidak ada kode tersimpan, tandai migrasi selesai
+        localStorage.setItem("carelife_migrated", "true");
+      }
+    }
+  }, []);
 
   useEffect(() => {
     setIsClient(true);
@@ -120,29 +149,40 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     setPhase("app");
   }, []);
 
-  const handleActivationSubmit = (e: React.FormEvent) => {
+  const handleActivationSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const cleanCode = activationCode.toUpperCase().trim();
+    setActivationError(null);
+    setIsSubmitting(true);
 
-    if (!isValidActivationCode(cleanCode)) {
-      setActivationError("Kode salah! Pastikan format benar (contoh: CL-1234) dan sesuai dengan buku.");
-      return;
+    try {
+      const res = await fetch("/api/activate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: cleanCode }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        // Error dari server (kode salah, sudah dipakai, dll)
+        setActivationError(data.error ?? "Terjadi kesalahan. Silakan coba lagi.");
+        return;
+      }
+
+      // Sukses — simpan ke localStorage sebagai cache agar tidak perlu hit API tiap buka app
+      const usedCodesRaw = localStorage.getItem("carelife_used_codes");
+      const usedCodes: string[] = usedCodesRaw ? JSON.parse(usedCodesRaw) : [];
+      localStorage.setItem("carelife_used_codes", JSON.stringify([...usedCodes, cleanCode]));
+      localStorage.setItem("carelife_activated", "true");
+      localStorage.setItem("carelife_migrated", "true");
+      setActivationStatus("activated");
+    } catch {
+      // Network error / server down
+      setActivationError("Gagal terhubung ke server. Periksa koneksi internet kamu dan coba lagi.");
+    } finally {
+      setIsSubmitting(false);
     }
-
-    // Cek apakah kode sudah pernah dipakai sebelumnya
-    const usedCodesRaw = localStorage.getItem("carelife_used_codes");
-    const usedCodes: string[] = usedCodesRaw ? JSON.parse(usedCodesRaw) : [];
-
-    if (usedCodes.includes(cleanCode)) {
-      setActivationError("Kode sudah pernah digunakan! Setiap kode hanya dapat dipakai satu kali.");
-      return;
-    }
-
-    // Kode valid & belum dipakai — tandai sebagai dipakai lalu aktifkan
-    const updatedUsedCodes = [...usedCodes, cleanCode];
-    localStorage.setItem("carelife_used_codes", JSON.stringify(updatedUsedCodes));
-    localStorage.setItem("carelife_activated", "true");
-    setActivationStatus("activated");
   };
 
   // GATE 1: Jika belum client-side atau sedang mengecek memori, kembalikan layar kosong
@@ -185,12 +225,13 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               {activationError && (
                  <p className="text-red-500 font-bold text-xs text-center">{activationError}</p>
               )}
-              <button
-                 type="submit"
-                 className="w-full py-3.5 bg-[#66B2B2] hover:bg-[#5AA3A3] text-white font-black text-sm rounded-[16px] border-2 border-[#1A1A1A] shadow-[4px_4px_0_#1A1A1A] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0_#1A1A1A] transition-all"
-              >
-                 Aktifkan Sekarang
-              </button>
+               <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full py-3.5 bg-[#66B2B2] hover:bg-[#5AA3A3] disabled:opacity-60 disabled:cursor-not-allowed text-white font-black text-sm rounded-[16px] border-2 border-[#1A1A1A] shadow-[4px_4px_0_#1A1A1A] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0_#1A1A1A] transition-all"
+               >
+                  {isSubmitting ? "Mengaktifkan..." : "Aktifkan Sekarang"}
+               </button>
            </form>
 
            <div className="mt-6 flex flex-col gap-2">
