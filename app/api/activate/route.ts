@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { Redis } from "@upstash/redis";
 import { isValidActivationCode } from "@/lib/activation";
 
+// Gunakan Edge Runtime — lebih ringan, tidak ada batas bundle size seperti serverless
+export const runtime = "edge";
+
 const redis = new Redis({
   url: process.env.UPSTASH_REDIS_REST_URL!,
   token: process.env.UPSTASH_REDIS_REST_TOKEN!,
