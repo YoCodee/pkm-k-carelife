@@ -13,6 +13,7 @@ interface Props {
   lesson: LessonContent;
   tema: Tema;
   mode: Mode;
+  isLocked?: boolean;
 }
 
 /**
@@ -26,20 +27,49 @@ interface Props {
  * - DOUBLE TAP = repeat current narration
  * - Visual elements exist only for the caretaker/teacher watching
  */
-export default function TunanetraLayout({ lesson, tema, mode }: Props) {
+export default function TunanetraLayout({ lesson, tema, mode, isLocked = false }: Props) {
   const prefersReducedMotion = usePrefersReducedMotion();
   const [currentStep, setCurrentStep] = useState(-1); // -1 = intro
   const [isFinished, setIsFinished] = useState(false);
   const [gestureHint, setGestureHint] = useState("");
   const [isAudioUnlocked, setIsAudioUnlocked] = useState(false);
 
-  const { isSpeaking, speak, stop: stopSpeaking } = useSpeechSynthesisSSR();
+  const { isSpeaking: isSpeakingTTS, speak, stop: stopSpeaking } = useSpeechSynthesisSSR();
+  const [isFilePlaying, setIsFilePlaying] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    audioRef.current = new Audio();
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.src = "";
+        audioRef.current = null;
+      }
+    };
+  }, []);
+
+  const isSpeaking = isSpeakingTTS || isFilePlaying;
 
   const totalSteps = lesson.steps.length;
   const step =
     currentStep >= 0 && currentStep < totalSteps
       ? lesson.steps[currentStep]
       : null;
+
+  const stopAudioFile = useCallback(() => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.onended = null;
+      audioRef.current.onerror = null;
+    }
+    setIsFilePlaying(false);
+  }, []);
+
+  const stopAllSpeech = useCallback(() => {
+    stopSpeaking();
+    stopAudioFile();
+  }, [stopSpeaking, stopAudioFile]);
 
   // Pointer tracking for gestures
   const pointerStartX = useRef(0);
@@ -51,7 +81,7 @@ export default function TunanetraLayout({ lesson, tema, mode }: Props) {
 
   // ── Navigation ──
   const goNext = useCallback(() => {
-    stopSpeaking();
+    stopAllSpeech();
     if (currentStep < totalSteps - 1) {
       playSFX("click");
       triggerHaptic("click");
@@ -84,10 +114,10 @@ export default function TunanetraLayout({ lesson, tema, mode }: Props) {
       triggerHaptic("click");
       setCurrentStep(0);
     }
-  }, [currentStep, totalSteps, stopSpeaking, lesson.id]);
+  }, [currentStep, totalSteps, stopAllSpeech, lesson.id]);
 
   const goPrev = useCallback(() => {
-    stopSpeaking();
+    stopAllSpeech();
     playSFX("back");
     triggerHaptic("back");
     if (isFinished) {
@@ -98,10 +128,10 @@ export default function TunanetraLayout({ lesson, tema, mode }: Props) {
     } else if (currentStep === 0) {
       setCurrentStep(-1);
     }
-  }, [currentStep, totalSteps, isFinished, stopSpeaking]);
+  }, [currentStep, totalSteps, isFinished, stopAllSpeech]);
 
   const repeatCurrent = useCallback(() => {
-    stopSpeaking();
+    stopAllSpeech();
     playSFX("click");
     triggerHaptic("click");
     // Paksa ulang dengan mentrigger perubahan state sementara
@@ -112,7 +142,7 @@ export default function TunanetraLayout({ lesson, tema, mode }: Props) {
       setIsFinished(fin);
       setCurrentStep(curr);
     }, 100);
-  }, [currentStep, isFinished, stopSpeaking]);
+  }, [currentStep, isFinished, stopAllSpeech]);
 
   // ── Auto-narrate on step change ──
   useEffect(() => {
@@ -134,15 +164,48 @@ export default function TunanetraLayout({ lesson, tema, mode }: Props) {
         const tactileText = step.tactileGuidance
           ? ` Panduan meraba buku: ${step.tactileGuidance}.`
           : "";
-        const stepText = `Langkah ${currentStep + 1} dari ${totalSteps}. ${step.audioNarration}.${tactileText} Ketuk layar untuk lanjut.`;
-        speak(stepText);
+        
+        const audioFileUrl = step.audioFileUrl;
+        if (audioFileUrl) {
+          const introText = `Langkah ${currentStep + 1} dari ${totalSteps}.`;
+          speak(introText, 0.85, 1.1, () => {
+            if (audioRef.current) {
+              stopAudioFile();
+              audioRef.current.src = audioFileUrl;
+              setIsFilePlaying(true);
+
+              audioRef.current.onended = () => {
+                setIsFilePlaying(false);
+                const suffixText = `${tactileText} Ketuk layar untuk lanjut.`;
+                speak(suffixText);
+              };
+              audioRef.current.onerror = () => {
+                setIsFilePlaying(false);
+                const suffixText = `${tactileText} Ketuk layar untuk lanjut.`;
+                speak(suffixText);
+              };
+              audioRef.current.play().catch((err) => {
+                console.error("Audio playback failed:", err);
+                setIsFilePlaying(false);
+                const fallbackText = `${step.audioNarration}.${tactileText} Ketuk layar untuk lanjut.`;
+                speak(fallbackText);
+              });
+            } else {
+              const fallbackText = `${step.audioNarration}.${tactileText} Ketuk layar untuk lanjut.`;
+              speak(fallbackText);
+            }
+          });
+        } else {
+          const stepText = `Langkah ${currentStep + 1} dari ${totalSteps}. ${step.audioNarration}.${tactileText} Ketuk layar untuk lanjut.`;
+          speak(stepText);
+        }
       }
     }, 400);
 
     return () => {
       if (speakTimeoutRef.current) clearTimeout(speakTimeoutRef.current);
       if (tapTimeoutRef.current) clearTimeout(tapTimeoutRef.current);
-      stopSpeaking();
+      stopAllSpeech();
     };
   }, [
     currentStep,
@@ -152,7 +215,8 @@ export default function TunanetraLayout({ lesson, tema, mode }: Props) {
     totalSteps,
     step,
     speak,
-    stopSpeaking,
+    stopAllSpeech,
+    stopAudioFile,
     isAudioUnlocked,
   ]); // added dependencies
 
@@ -189,6 +253,13 @@ export default function TunanetraLayout({ lesson, tema, mode }: Props) {
         speechSynthesis.cancel();
         speechSynthesis.speak(new SpeechSynthesisUtterance(""));
       }
+      
+      // Unlock the audio element by playing silent WAV
+      if (audioRef.current) {
+        audioRef.current.src = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAAA";
+        audioRef.current.play().catch(err => console.log("Unlock audio failed:", err));
+      }
+
       playSFX("click");
       triggerHaptic("click");
 
@@ -210,7 +281,7 @@ export default function TunanetraLayout({ lesson, tema, mode }: Props) {
         // Swipe RIGHT → next
         showGesture("Lanjut ➡️");
         if (isFinished) {
-          window.location.href = "/learn";
+          window.location.href = `/learn${isLocked ? '?locked=true' : ''}`;
         } else {
           goNext();
         }
@@ -239,7 +310,7 @@ export default function TunanetraLayout({ lesson, tema, mode }: Props) {
       tapTimeoutRef.current = setTimeout(() => {
         tapTimeoutRef.current = null;
         if (isFinished) {
-          window.location.href = "/learn";
+          window.location.href = `/learn${isLocked ? '?locked=true' : ''}`;
         } else {
           showGesture("Lanjut ➡️");
           goNext();
@@ -257,7 +328,7 @@ export default function TunanetraLayout({ lesson, tema, mode }: Props) {
         case "Enter":
           e.preventDefault();
           if (isFinished) {
-            window.location.href = "/learn";
+            window.location.href = `/learn${isLocked ? '?locked=true' : ''}`;
           } else {
             goNext();
           }
@@ -336,7 +407,7 @@ export default function TunanetraLayout({ lesson, tema, mode }: Props) {
       <header className="px-6 pt-8 pb-4">
         <div className="max-w-[700px] mx-auto">
           <Link
-            href={`/learn?mode=${mode}`}
+            href={`/learn?mode=${mode}${isLocked ? '&locked=true' : ''}`}
             className="inline-flex items-center gap-2 text-sm font-black text-[#1A1A1A] px-4 py-2 rounded-full border-2 border-[#1A1A1A] bg-white shadow-[2px_2px_0_#1A1A1A] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0_#1A1A1A] transition-all mb-4"
           >
             <ArrowLeft size={18} strokeWidth={3} />
@@ -516,7 +587,7 @@ export default function TunanetraLayout({ lesson, tema, mode }: Props) {
 
               <div className="flex flex-col gap-3 pt-2">
                 <Link
-                  href="/learn"
+                  href={`/learn${isLocked ? '?locked=true' : ''}`}
                   className="block w-full py-4 bg-[#66B2B2] text-white rounded-[20px] font-black text-base text-center border-2 border-[#1A1A1A] shadow-[4px_4px_0_#1A1A1A] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_#1A1A1A] transition-all"
                 >
                   📚 Pilih Tema Lain

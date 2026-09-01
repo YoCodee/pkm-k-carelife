@@ -21,7 +21,7 @@ export default function AboutPage() {
             10–15 tahun.
           </p>
           <p className="text-[#1A1A1A] leading-relaxed font-bold text-sm md:text-base">
-            Aplikasi ini diakses via QR Code yang tercetak di buku fisik,
+            Aplikasi ini diakses via web portal secara langsung,
             menyajikan konten video edukasi multisensorial, dan dilengkapi AI
             Chat berbasis Gemini Flash 2.5 untuk membantu orang tua, guru, dan
             terapis dalam mendampingi proses belajar ABK.
@@ -39,7 +39,7 @@ export default function AboutPage() {
                 <span className="text-xl mt-0.5">✅</span>
                 <span className="text-sm font-bold text-[#1A1A1A]">
                   Menyediakan konten video edukasi digital yang dapat diakses
-                  via QR Code dari buku fisik CareLife
+                  melalui web portal CareLife
                 </span>
               </li>
               <li className="flex gap-3 items-start bg-[#F8F9FA] p-3 rounded-[16px] border-2 border-[#1A1A1A]/10">

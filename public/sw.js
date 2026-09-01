@@ -1,9 +1,28 @@
-const CACHE_NAME = "carelife-cache-v1";
+const CACHE_NAME = "carelife-cache-v4";
 const ASSETS_TO_CACHE = [
   "/",
+  "/menu/",
+  "/about/",
+  "/beli/",
+  "/chat/",
+  "/qr/",
+  "/scan/",
+  "/learn/",
+  "/learn/perawatan-diri/visual/",
+  "/learn/perawatan-diri/suara/",
+  "/learn/perawatan-diri/ceria/",
+  "/learn/perlindungan-diri/visual/",
+  "/learn/perlindungan-diri/suara/",
+  "/learn/perlindungan-diri/ceria/",
+  "/learn/keterampilan-sosial/visual/",
+  "/learn/keterampilan-sosial/suara/",
+  "/learn/keterampilan-sosial/ceria/",
+  "/learn/kesiapan-karir/visual/",
+  "/learn/kesiapan-karir/suara/",
+  "/learn/kesiapan-karir/ceria/",
   "/manifest.json",
   "/logo-carelife.png",
-  "/favicon.ico"
+  "/gestures/image.png"
 ];
 
 // Install Service Worker

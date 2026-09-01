@@ -1,19 +1,28 @@
 "use client";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { useEffect } from "react";
-import { Home, BookOpen, MessageCircle, ShoppingBag, ScanLine } from "lucide-react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useEffect, Suspense } from "react";
+import { Home, BookOpen, MessageCircle, ShoppingBag } from "lucide-react";
 import { playSFX, triggerHaptic } from "@/lib/sfx";
 
-export default function BottomNav() {
+function BottomNavContent() {
   const pathname = usePathname();
   const router = useRouter();
-  const isActive = (path: string) => pathname === path;
+  const searchParams = useSearchParams();
+  const isLocked = searchParams.get("locked") === "true";
+
+  const isActive = (path: string) => {
+    if (path === "/") {
+      return pathname === "/" || pathname === "/index.html" || pathname.endsWith("/index.html") || pathname === "/index";
+    }
+    const cleanPathname = pathname.replace(/\.html$/, "").replace(/\/$/, "");
+    const cleanPath = path.replace(/\/$/, "");
+    return cleanPathname === cleanPath || cleanPathname.endsWith(cleanPath);
+  };
 
   const navItems = [
     { href: "/", icon: Home, label: "Home" },
     { href: "/menu", icon: BookOpen, label: "Belajar" },
-    { href: "/scan", icon: ScanLine, label: "Scan QR" },
     { href: "/chat", icon: MessageCircle, label: "Tanya AI" },
     { href: "/beli", icon: ShoppingBag, label: "Beli" },
   ];
@@ -22,10 +31,29 @@ export default function BottomNav() {
   useEffect(() => {
     router.prefetch("/");
     router.prefetch("/menu");
-    router.prefetch("/scan");
     router.prefetch("/chat");
     router.prefetch("/beli");
   }, [router]);
+
+  // Trap the back button if locked
+  useEffect(() => {
+    if (isLocked) {
+      const handlePopState = () => {
+        // Push the current state again so they can't go back
+        window.history.pushState(null, "", window.location.href);
+      };
+      // Push once to create the trap state
+      window.history.pushState(null, "", window.location.href);
+      window.addEventListener("popstate", handlePopState);
+      return () => {
+        window.removeEventListener("popstate", handlePopState);
+      };
+    }
+  }, [isLocked]);
+
+  if (isLocked) {
+    return null; // Sembunyikan navbar jika sedang dilock
+  }
 
   const handleNavClick = (href: string) => {
     if (pathname !== href) {
@@ -53,5 +81,13 @@ export default function BottomNav() {
         ))}
       </nav>
     </div>
+  );
+}
+
+export default function BottomNav() {
+  return (
+    <Suspense fallback={null}>
+      <BottomNavContent />
+    </Suspense>
   );
 }

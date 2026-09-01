@@ -14,16 +14,24 @@ interface InteractiveActivityProps {
 export default function InteractiveActivity({ activity, onCorrect }: InteractiveActivityProps) {
   const [isCompleted, setIsCompleted] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const completedRef = useRef(false);
+
+  // Reset completedRef when activity changes
+  useEffect(() => {
+    completedRef.current = false;
+    setIsCompleted(false);
+  }, [activity]);
 
   // Play success sound and trigger completion
   const handleSuccess = () => {
+    if (completedRef.current) return;
+    completedRef.current = true;
     setIsCompleted(true);
     playSFX("success");
     triggerHaptic("success");
     // Beri sedikit jeda agar anak melihat animasi sukses sebelum lanjut ke langkah berikutnya
     setTimeout(() => {
       onCorrect();
-      setIsCompleted(false);
     }, 1500);
   };
 
@@ -108,8 +116,10 @@ function ScrubActivity({ activity, onComplete, parentRef }: {
 }) {
   const [items, setItems] = useState<ScrubItem[]>([]);
   const areaRef = useRef<HTMLDivElement>(null);
+  const hasTriggeredRef = useRef(false);
 
   useEffect(() => {
+    hasTriggeredRef.current = false;
     // Generate 8 kotoran/kuman acak pada layout
     const newItems: ScrubItem[] = Array.from({ length: 8 }).map((_, i) => ({
       id: i,
@@ -150,8 +160,11 @@ function ScrubActivity({ activity, onComplete, parentRef }: {
 
   const handlePointerClear = (id: number) => {
     setItems((prev) => {
+      const targetItem = prev.find((item) => item.id === id);
+      if (!targetItem || targetItem.cleaned) return prev;
+
       const updated = prev.map((item) => {
-        if (item.id === id && !item.cleaned) {
+        if (item.id === id) {
           playPopSound();
           triggerHaptic("click");
           return { ...item, cleaned: true };
@@ -160,7 +173,8 @@ function ScrubActivity({ activity, onComplete, parentRef }: {
       });
 
       // Periksa apakah semua kuman sudah bersih
-      if (updated.every((item) => item.cleaned)) {
+      if (updated.every((item) => item.cleaned) && !hasTriggeredRef.current) {
+        hasTriggeredRef.current = true;
         setTimeout(onComplete, 300);
       }
       return updated;
@@ -407,8 +421,10 @@ function CatchStarsActivity({ activity, onComplete }: {
   onComplete: () => void;
 }) {
   const [stars, setStars] = useState<StarItem[]>([]);
+  const hasTriggeredRef = useRef(false);
 
   useEffect(() => {
+    hasTriggeredRef.current = false;
     const count = activity.starCount || 3;
     const newStars: StarItem[] = Array.from({ length: count }).map((_, i) => ({
       id: i,
@@ -449,8 +465,11 @@ function CatchStarsActivity({ activity, onComplete }: {
 
   const handleStarTap = (id: number) => {
     setStars((prev) => {
+      const targetStar = prev.find((s) => s.id === id);
+      if (!targetStar || targetStar.tapped) return prev;
+
       const updated = prev.map((s) => {
-        if (s.id === id && !s.tapped) {
+        if (s.id === id) {
           playClimeSound();
           triggerHaptic("click");
           return { ...s, tapped: true };
@@ -458,7 +477,8 @@ function CatchStarsActivity({ activity, onComplete }: {
         return s;
       });
 
-      if (updated.every((s) => s.tapped)) {
+      if (updated.every((s) => s.tapped) && !hasTriggeredRef.current) {
+        hasTriggeredRef.current = true;
         setTimeout(onComplete, 400);
       }
       return updated;

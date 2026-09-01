@@ -203,42 +203,49 @@ export default function JBIOverlay({
   const [speed, setSpeed] = useState(800);
   const jbiVideoRef = useRef<HTMLVideoElement>(null);
 
-  // Sync JBI video and primary video
+  // Sync JBI video AND hand animation with primary video
   useEffect(() => {
-    if (!jbiVideoUrl || !primaryVideoRef?.current) return;
+    if (!primaryVideoRef?.current) return;
 
     let animationFrameId: number;
 
-    const syncVideos = () => {
+    const syncAll = () => {
       const primary = primaryVideoRef.current;
       const jbi = jbiVideoRef.current;
 
-      if (primary && jbi) {
-        // Sync play/pause states
-        if (primary.paused && !jbi.paused) {
-          jbi.pause();
-        } else if (!primary.paused && jbi.paused) {
-          jbi
-            .play()
-            .catch((err) => console.log("Failed to play JBI video:", err));
+      if (primary) {
+        // --- Sync JBI video ---
+        if (jbi) {
+          if (primary.paused && !jbi.paused) {
+            jbi.pause();
+          } else if (!primary.paused && jbi.paused) {
+            jbi
+              .play()
+              .catch((err) => console.log("Failed to play JBI video:", err));
+          }
+          if (primary.playbackRate !== jbi.playbackRate) {
+            jbi.playbackRate = primary.playbackRate;
+          }
+          const timeDiff = Math.abs(primary.currentTime - jbi.currentTime);
+          if (timeDiff > 0.1 && jbi.readyState >= 2) {
+            jbi.currentTime = primary.currentTime;
+          }
         }
 
-        // Sync playback rate
-        if (primary.playbackRate !== jbi.playbackRate) {
-          jbi.playbackRate = primary.playbackRate;
-        }
+        // --- Sync hand animation play/pause ---
+        setIsPlaying(!primary.paused);
 
-        // Sync current time if drift is larger than 0.1 seconds
-        const timeDiff = Math.abs(primary.currentTime - jbi.currentTime);
-        if (timeDiff > 0.1 && jbi.readyState >= 2) {
-          jbi.currentTime = primary.currentTime;
-        }
+        // --- Sync hand animation speed to playbackRate ---
+        // base speed 800ms at 1x, faster at higher rates
+        const baseSpeed = 800;
+        const syncedSpeed = Math.round(baseSpeed / (primary.playbackRate || 1));
+        setSpeed(syncedSpeed);
       }
 
-      animationFrameId = requestAnimationFrame(syncVideos);
+      animationFrameId = requestAnimationFrame(syncAll);
     };
 
-    animationFrameId = requestAnimationFrame(syncVideos);
+    animationFrameId = requestAnimationFrame(syncAll);
 
     return () => {
       cancelAnimationFrame(animationFrameId);
@@ -356,30 +363,27 @@ export default function JBIOverlay({
     );
   };
 
-  const JbiVideoBox = () => {
-    if (!jbiVideoUrl) return null;
-    return (
-      <div className="absolute bottom-4 left-4 z-20 w-24 md:w-32 aspect-video bg-[#1A1A1A] rounded-xl border-2 border-pink-400 overflow-hidden shadow-[2px_2px_0_rgba(0,0,0,0.3)]">
-        <video
-          ref={jbiVideoRef}
-          className="w-full h-full object-cover"
-          muted
-          playsInline
-          loop
-        >
-          <source src={jbiVideoUrl} type="video/mp4" />
-        </video>
-        <div className="absolute top-1 left-1 bg-pink-500 text-[8px] font-black text-white px-1.5 py-0.5 rounded uppercase tracking-widest">
-          JBI Sync
-        </div>
-      </div>
-    );
-  };
+  const jbiVideoBox = jbiVideoUrl ? (
+    <div className="absolute bottom-4 left-4 z-20 w-32 md:w-48 aspect-video bg-[#1A1A1A] rounded-xl border-2 border-pink-400 overflow-hidden shadow-[4px_4px_0_rgba(0,0,0,0.3)]">
+      <video
+        ref={jbiVideoRef}
+        key={jbiVideoUrl}
+        className="w-full h-full object-cover"
+        muted
+        playsInline
+        loop
+      >
+        <source src={jbiVideoUrl} type="video/mp4" />
+      </video>
+    </div>
+  ) : null;
 
   if (!expanded) {
     return (
       <>
-        <JbiVideoBox />
+        {jbiVideoBox}
+        {/* Mobile: gesture tangan mini di atas JBI video (kanan bawah JBI area) */}
+        {/* Desktop: gesture tangan di kanan bawah seperti biasa */}
         <motion.div
           layout
           onClick={() => setExpanded(true)}
@@ -387,21 +391,41 @@ export default function JBIOverlay({
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
         >
-          <div className="bg-white/95 backdrop-blur-md rounded-[20px] border-2 border-pink-300 shadow-xl shadow-pink-200/30 p-2.5 flex items-center gap-3">
-            {/* Animated Hand Visualizer Container */}
-            <div className="relative w-12 h-12 bg-gradient-to-br from-pink-50 to-pink-100 rounded-[14px] flex items-center justify-center flex-shrink-0 border border-pink-200">
-              {renderHand("w-10 h-10")}
+          {/* Mobile: compact pill — hanya icon tangan kecil + huruf */}
+          <div className="md:hidden bg-white/95 backdrop-blur-md rounded-2xl border-2 border-pink-300 shadow-lg shadow-pink-200/30 p-1.5 flex items-center gap-1.5">
+            <div className="relative w-9 h-9 bg-gradient-to-br from-pink-50 to-pink-100 rounded-xl flex items-center justify-center flex-shrink-0 border border-pink-200">
+              {renderHand("w-8 h-8")}
               {currentLetter && currentLetter !== " " && (
-                <div className="absolute -top-1.5 -right-1.5 bg-pink-500 text-white w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black shadow-md shadow-pink-300">
+                <div className="absolute -top-1.5 -right-1.5 bg-pink-500 text-white w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-black shadow shadow-pink-300">
                   {currentLetter}
                 </div>
               )}
             </div>
             <div className="pr-1">
-              <p className="font-black text-pink-900 text-[9px] uppercase tracking-wider">
+              <p className="font-black text-pink-900 text-[9px] uppercase tracking-wide leading-tight">
+                Isyarat
+              </p>
+              <p className="font-bold text-pink-600 text-[9px] font-extrabold leading-tight">
+                {currentWord || "..."}
+              </p>
+            </div>
+          </div>
+
+          {/* Desktop: full card seperti biasa */}
+          <div className="hidden md:flex bg-white/95 backdrop-blur-md rounded-[22px] border-2 border-pink-300 shadow-xl shadow-pink-200/30 p-3 items-center gap-3">
+            <div className="relative w-16 h-16 bg-gradient-to-br from-pink-50 to-pink-100 rounded-[16px] flex items-center justify-center flex-shrink-0 border border-pink-200">
+              {renderHand("w-14 h-14")}
+              {currentLetter && currentLetter !== " " && (
+                <div className="absolute -top-2 -right-2 bg-pink-500 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs font-black shadow-md shadow-pink-300">
+                  {currentLetter}
+                </div>
+              )}
+            </div>
+            <div className="pr-2">
+              <p className="font-black text-pink-900 text-[11px] uppercase tracking-wider">
                 Bahasa Isyarat
               </p>
-              <p className="font-bold text-[#6B7280] text-[8px] mt-0.5">
+              <p className="font-bold text-[#6B7280] text-[10px] mt-0.5">
                 Mengeja:{" "}
                 <span className="text-pink-600 font-extrabold">
                   {currentWord || "..."}
@@ -416,7 +440,7 @@ export default function JBIOverlay({
 
   return (
     <>
-      <JbiVideoBox />
+      {jbiVideoBox}
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}

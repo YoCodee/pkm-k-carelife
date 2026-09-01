@@ -6,7 +6,14 @@ import { usePathname } from "next/navigation";
 export default function Navbar() {
   const pathname = usePathname();
 
-  const isActive = (path: string) => pathname === path;
+  const isActive = (path: string) => {
+    if (path === "/") {
+      return pathname === "/" || pathname === "/index.html" || pathname.endsWith("/index.html") || pathname === "/index";
+    }
+    const cleanPathname = pathname.replace(/\.html$/, "").replace(/\/$/, "");
+    const cleanPath = path.replace(/\/$/, "");
+    return cleanPathname === cleanPath || cleanPathname.endsWith(cleanPath);
+  };
 
   return (
     <nav className="sticky top-0 z-50 bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg">
@@ -14,9 +21,13 @@ export default function Navbar() {
         <div className="flex justify-between items-center h-16">
           <Link
             href="/"
-            className="flex items-center space-x-2 font-bold text-xl"
+            className="flex items-center space-x-2 font-black text-xl"
           >
-            <span className="text-2xl">💚</span>
+            <img
+              src="/logo-carelife.png"
+              alt="CareLife Logo"
+              className="w-8 h-8 object-contain rounded-[6px] bg-white p-0.5 border border-[#1A1A1A]"
+            />
             <span>CareLife</span>
           </Link>
 

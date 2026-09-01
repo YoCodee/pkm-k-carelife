@@ -74,7 +74,12 @@ export default function IntroPage1({ onContinue, onSkip }: { onContinue: () => v
       </div>
 
       {/* Text content */}
-      <div className="text-center px-8 mb-6">
+      <div className="text-center px-8 mb-6 flex flex-col items-center">
+        <img
+          src="/logo-carelife.png"
+          alt="CareLife Logo"
+          className="w-20 h-20 object-contain border-2 border-[#1A1A1A] p-2 rounded-[20px] bg-white shadow-[2px_2px_0_#1A1A1A] mb-4"
+        />
         <h1 className="text-[28px] font-black text-[#1A1A1A] leading-tight mb-3">
           Welcome<br/>to the <span className="text-[#66B2B2]">CareLife</span>
         </h1>

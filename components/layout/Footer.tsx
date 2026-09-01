@@ -76,7 +76,12 @@ export default function Footer() {
                 </a>
               </li>
               <li>
-                <a href="#" className="hover:text-white transition">
+                <a
+                  href="https://wa.me/62895352977785?text=Halo%20CareLife%2C%20saya%20ingin%20bertanya%20seputar%20CareLife."
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-white transition"
+                >
                   WhatsApp Business
                 </a>
               </li>

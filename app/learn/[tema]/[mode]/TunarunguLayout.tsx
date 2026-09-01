@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { ArrowLeft, ChevronLeft, ChevronRight, VolumeX } from "lucide-react";
+import { ArrowLeft, ChevronLeft, ChevronRight, Volume2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { LessonContent, Mode, Tema } from "@/lib/content";
 import JBIOverlay from "@/components/accessibility/JBIOverlay";
@@ -14,16 +14,42 @@ interface Props {
   lesson: LessonContent;
   tema: Tema;
   mode: Mode;
+  isLocked?: boolean;
 }
 
-export default function TunarunguLayout({ lesson, tema, mode }: Props) {
+export default function TunarunguLayout({ lesson, tema, mode, isLocked = false }: Props) {
   const prefersReducedMotion = usePrefersReducedMotion();
   const [currentStep, setCurrentStep] = useState(0);
   const [isFinished, setIsFinished] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const totalSteps = lesson.steps.length;
   const step = lesson.steps[currentStep] || lesson.steps[0];
+
+  useEffect(() => {
+    if (!audioRef.current) {
+      audioRef.current = new Audio();
+    }
+    
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.src = "";
+        audioRef.current = null;
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (audioRef.current && step?.audioFileUrl && !isFinished) {
+      audioRef.current.pause();
+      audioRef.current.src = step.audioFileUrl;
+      audioRef.current.play().catch(err => console.log("Autoplay audio failed:", err));
+    } else if (audioRef.current && isFinished) {
+      audioRef.current.pause();
+    }
+  }, [currentStep, step, isFinished]);
 
   const goNext = () => {
     if (currentStep < totalSteps - 1) {
@@ -77,7 +103,7 @@ export default function TunarunguLayout({ lesson, tema, mode }: Props) {
         <header className="px-6 pt-8 pb-4">
           <div className="max-w-[700px] mx-auto">
             <Link
-              href={`/learn?mode=${mode}`}
+              href={`/learn?mode=${mode}${isLocked ? '&locked=true' : ''}`}
               className="inline-flex items-center gap-2 text-sm font-black text-[#1A1A1A] px-4 py-2 rounded-full border-2 border-[#1A1A1A] bg-white shadow-[2px_2px_0_#1A1A1A] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0_#1A1A1A] transition-all mb-4"
             >
               <ArrowLeft size={18} strokeWidth={3} />
@@ -87,13 +113,19 @@ export default function TunarunguLayout({ lesson, tema, mode }: Props) {
         </header>
         <div className="px-6 py-8 max-w-[700px] mx-auto">
           <motion.div
-            initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, scale: 0.9 }}
-            animate={prefersReducedMotion ? { opacity: 1 } : { opacity: 1, scale: 1 }}
+            initial={
+              prefersReducedMotion ? { opacity: 0 } : { opacity: 0, scale: 0.9 }
+            }
+            animate={
+              prefersReducedMotion ? { opacity: 1 } : { opacity: 1, scale: 1 }
+            }
             className="bg-white rounded-[32px] border-2 border-[#1A1A1A] p-8 text-center shadow-[4px_4px_0_#1A1A1A]"
           >
             <motion.div
               animate={prefersReducedMotion ? {} : { y: [0, -10, 0] }}
-              transition={prefersReducedMotion ? {} : { repeat: Infinity, duration: 1.5 }}
+              transition={
+                prefersReducedMotion ? {} : { repeat: Infinity, duration: 1.5 }
+              }
               className="text-8xl mb-4"
             >
               🎉
@@ -115,7 +147,7 @@ export default function TunarunguLayout({ lesson, tema, mode }: Props) {
                 🔄 Ulangi dari Awal
               </motion.button>
               <Link
-                href={`/learn?mode=${mode}`}
+                href={`/learn${isLocked ? '?locked=true' : ''}`}
                 className="block w-full py-4 bg-[#66B2B2] text-white rounded-[20px] font-black text-base text-center border-2 border-[#1A1A1A] shadow-[4px_4px_0_#1A1A1A] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_#1A1A1A] transition-all"
               >
                 📚 Pilih Tema Lain
@@ -132,7 +164,7 @@ export default function TunarunguLayout({ lesson, tema, mode }: Props) {
       <header className="px-6 pt-8 pb-4">
         <div className="max-w-[700px] mx-auto">
           <Link
-            href={`/learn?mode=${mode}`}
+            href={`/learn?mode=${mode}${isLocked ? '&locked=true' : ''}`}
             className="inline-flex items-center gap-2 text-sm font-black text-[#1A1A1A] px-4 py-2 rounded-full border-2 border-[#1A1A1A] bg-white shadow-[2px_2px_0_#1A1A1A] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0_#1A1A1A] transition-all mb-4"
           >
             <ArrowLeft size={18} strokeWidth={3} />
@@ -168,9 +200,15 @@ export default function TunarunguLayout({ lesson, tema, mode }: Props) {
         <AnimatePresence mode="wait">
           <motion.div
             key={`step-${currentStep}`}
-            initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: 30 }}
-            animate={prefersReducedMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
-            exit={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: -30 }}
+            initial={
+              prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: 30 }
+            }
+            animate={
+              prefersReducedMotion ? { opacity: 1 } : { opacity: 1, y: 0 }
+            }
+            exit={
+              prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: -30 }
+            }
             className="space-y-5 w-full"
           >
             <div className="relative bg-[#1A2835] rounded-[28px] overflow-hidden aspect-video border-2 border-[#1A1A1A] shadow-[4px_4px_0_#1A1A1A]">
@@ -187,25 +225,18 @@ export default function TunarunguLayout({ lesson, tema, mode }: Props) {
                 </video>
               )}
 
-              <div className="absolute top-4 left-4 bg-[#FFB6B6] rounded-full p-2 flex items-center gap-2 border-2 border-[#1A1A1A]">
-                <VolumeX size={16} className="text-[#1A1A1A]" />
+              <div className="absolute top-4 left-4 bg-[#A7F3D0] rounded-full p-2 flex items-center gap-2 border-2 border-[#1A1A1A]">
+                <Volume2 size={16} className="text-[#1A1A1A]" />
                 <span className="text-[10px] font-bold text-[#1A1A1A] pr-1">
-                  Tanpa Suara
+                  Suara Aktif
                 </span>
               </div>
 
-              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-5 pt-10">
-                <motion.p
-                  key={step.textCaption}
-                  initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: 10 }}
-                  animate={prefersReducedMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
-                  className="text-white text-lg md:text-xl font-black text-center leading-relaxed"
-                >
-                  {step.textCaption}
-                </motion.p>
-              </div>
-
-              <JBIOverlay caption={step.textCaption} jbiVideoUrl={step.jbiVideoUrl} primaryVideoRef={videoRef} />
+              <JBIOverlay
+                caption={step.audioNarration}
+                jbiVideoUrl={step.jbiVideoUrl}
+                primaryVideoRef={videoRef}
+              />
             </div>
 
             <div className="bg-white rounded-[28px] border-2 border-[#1A1A1A] p-6 text-center shadow-[4px_4px_0_#1A1A1A]">

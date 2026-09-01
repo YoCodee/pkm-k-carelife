@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import AppShell from "@/components/AppShell";
+import { generateActivationCodesFile } from "@/lib/activation";
+
+generateActivationCodesFile();
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -18,6 +21,11 @@ export const metadata: Metadata = {
   description:
     "Platform digital pendamping buku CareLife untuk anak berkebutuhan khusus dengan fitur aksesibilitas lengkap.",
   manifest: "/manifest.json",
+  icons: {
+    icon: "/logo-carelife.png",
+    shortcut: "/logo-carelife.png",
+    apple: "/logo-carelife.png",
+  },
 };
 
 export default function RootLayout({

@@ -15,7 +15,6 @@ import type { LessonContent, Mode, Tema } from "@/lib/content";
 import SpeedControl from "@/components/accessibility/SpeedControl";
 import StarProgress from "@/components/accessibility/StarProgress";
 import InteractiveActivity from "@/components/accessibility/InteractiveActivity";
-import AudioNarrator from "@/components/accessibility/AudioNarrator";
 import { usePrefersReducedMotion } from "@/lib/hooks/usePrefersReducedMotion";
 import { playSFX, triggerHaptic } from "@/lib/sfx";
 
@@ -23,9 +22,10 @@ interface Props {
   lesson: LessonContent;
   tema: Tema;
   mode: Mode;
+  isLocked?: boolean;
 }
 
-export default function TunagrahitaLayout({ lesson, tema, mode }: Props) {
+export default function TunagrahitaLayout({ lesson, tema, mode, isLocked = false }: Props) {
   const prefersReducedMotion = usePrefersReducedMotion();
   const [currentStep, setCurrentStep] = useState(0);
   const [stars, setStars] = useState(0);
@@ -37,13 +37,46 @@ export default function TunagrahitaLayout({ lesson, tema, mode }: Props) {
 
   const totalSteps = lesson.steps.length;
   const step = lesson.steps[currentStep] || lesson.steps[0];
-  const hasActivity = !!step?.activity;
+  const ENABLE_ACTIVITIES = false; // Ubah ke true untuk mengaktifkan game kembali jika diperlukan
+  const hasActivity = ENABLE_ACTIVITIES && !!step?.activity;
 
+  const playVideoForStep = (stepIndex: number) => {
+    const targetStep = lesson.steps[stepIndex];
+    if (targetStep && targetStep.videoClipUrl && videoRef.current) {
+      videoRef.current.src = targetStep.videoClipUrl;
+      videoRef.current.load();
+      videoRef.current.playbackRate = videoSpeed;
+      videoRef.current.play()
+        .then(() => {
+          setIsPlaying(true);
+        })
+        .catch((err) => {
+          console.log("Autoplay was prevented by browser:", err);
+          setIsPlaying(false);
+        });
+    } else {
+      setIsPlaying(false);
+    }
+  };
+
+  // Autoplay video clip on mount or lesson change
+  useEffect(() => {
+    playVideoForStep(0);
+  }, [lesson]);
+
+  // Apply playbackRate once metadata is loaded (safeguard for remounts)
+  const handleVideoLoad = () => {
+    if (videoRef.current) {
+      videoRef.current.playbackRate = videoSpeed;
+    }
+  };
+
+  // Update playbackRate in real-time when videoSpeed changes
   useEffect(() => {
     if (videoRef.current) {
       videoRef.current.playbackRate = videoSpeed;
     }
-  }, [videoSpeed, currentStep]);
+  }, [videoSpeed]);
 
   const toggleVideo = () => {
     if (!videoRef.current) return;
@@ -53,8 +86,11 @@ export default function TunagrahitaLayout({ lesson, tema, mode }: Props) {
       videoRef.current.pause();
       setIsPlaying(false);
     } else {
-      videoRef.current.play();
-      setIsPlaying(true);
+      videoRef.current.play()
+        .then(() => {
+          setIsPlaying(true);
+        })
+        .catch((err) => console.error("Error playing video:", err));
     }
   };
 
@@ -71,7 +107,9 @@ export default function TunagrahitaLayout({ lesson, tema, mode }: Props) {
     if (currentStep < totalSteps - 1) {
       playSFX("click");
       triggerHaptic("click");
-      setCurrentStep((s) => s + 1);
+      const nextStepIndex = currentStep + 1;
+      setCurrentStep(nextStepIndex);
+      playVideoForStep(nextStepIndex);
     } else {
       setIsFinished(true);
       playSFX("finish");
@@ -112,6 +150,7 @@ export default function TunagrahitaLayout({ lesson, tema, mode }: Props) {
     setShowActivity(false);
     setIsFinished(false);
     setIsPlaying(false);
+    playVideoForStep(0);
   };
 
   const totalActivities = lesson.steps.filter((s) => s.activity).length;
@@ -122,7 +161,7 @@ export default function TunagrahitaLayout({ lesson, tema, mode }: Props) {
         <header className="px-6 pt-8 pb-4">
           <div className="max-w-[600px] mx-auto">
             <Link
-              href={`/learn?mode=${mode}`}
+              href={`/learn?mode=${mode}${isLocked ? '&locked=true' : ''}`}
               className="inline-flex items-center gap-2 text-sm font-black text-[#1A1A1A] px-4 py-2 rounded-full border-2 border-[#1A1A1A] bg-white shadow-[2px_2px_0_#1A1A1A] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0_#1A1A1A] transition-all mb-4"
             >
               <ArrowLeft size={18} strokeWidth={3} />
@@ -132,13 +171,23 @@ export default function TunagrahitaLayout({ lesson, tema, mode }: Props) {
         </header>
         <div className="px-6 py-8 max-w-[600px] mx-auto">
           <motion.div
-            initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, scale: 0.9 }}
-            animate={prefersReducedMotion ? { opacity: 1 } : { opacity: 1, scale: 1 }}
+            initial={
+              prefersReducedMotion ? { opacity: 0 } : { opacity: 0, scale: 0.9 }
+            }
+            animate={
+              prefersReducedMotion ? { opacity: 1 } : { opacity: 1, scale: 1 }
+            }
             className="bg-white rounded-[32px] border-2 border-[#1A1A1A] p-8 text-center shadow-[4px_4px_0_#1A1A1A]"
           >
             <motion.div
-              animate={prefersReducedMotion ? {} : { rotate: [0, 15, -15, 0], scale: [1, 1.1, 1] }}
-              transition={prefersReducedMotion ? {} : { repeat: Infinity, duration: 2 }}
+              animate={
+                prefersReducedMotion
+                  ? {}
+                  : { rotate: [0, 15, -15, 0], scale: [1, 1.1, 1] }
+              }
+              transition={
+                prefersReducedMotion ? {} : { repeat: Infinity, duration: 2 }
+              }
               className="text-8xl mb-4"
             >
               🏆
@@ -150,12 +199,14 @@ export default function TunagrahitaLayout({ lesson, tema, mode }: Props) {
               Semua {totalSteps} langkah sudah selesai!
             </p>
 
-            <div className="bg-[#FFD700]/30 rounded-[20px] p-5 mb-6 border-2 border-[#1A1A1A]">
-              <p className="text-sm font-black text-[#1A1A1A] mb-3">
-                Bintang yang kamu dapat:
-              </p>
-              <StarProgress current={stars} total={totalActivities} />
-            </div>
+            {ENABLE_ACTIVITIES && (
+              <div className="bg-[#FFD700]/30 rounded-[20px] p-5 mb-6 border-2 border-[#1A1A1A]">
+                <p className="text-sm font-black text-[#1A1A1A] mb-3">
+                  Bintang yang kamu dapat:
+                </p>
+                <StarProgress current={stars} total={totalActivities} />
+              </div>
+            )}
 
             <div className="flex flex-col gap-3">
               <motion.button
@@ -166,7 +217,7 @@ export default function TunagrahitaLayout({ lesson, tema, mode }: Props) {
                 <RotateCcw size={22} /> Ulangi Lagi
               </motion.button>
               <Link
-                href="/learn"
+                href={`/learn${isLocked ? '?locked=true' : ''}`}
                 className="block w-full py-4 bg-[#FFD700] text-[#1A1A1A] rounded-[20px] font-black text-lg text-center border-2 border-[#1A1A1A] shadow-[4px_4px_0_#1A1A1A] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_#1A1A1A] transition-all"
               >
                 <span className="flex items-center justify-center gap-2">
@@ -185,7 +236,7 @@ export default function TunagrahitaLayout({ lesson, tema, mode }: Props) {
       <header className="px-6 pt-8 pb-4">
         <div className="max-w-[600px] mx-auto">
           <Link
-            href={`/learn?mode=${mode}`}
+            href={`/learn?mode=${mode}${isLocked ? '&locked=true' : ''}`}
             className="inline-flex items-center gap-2 text-sm font-black text-[#1A1A1A] px-4 py-2 rounded-full border-2 border-[#1A1A1A] bg-white shadow-[2px_2px_0_#1A1A1A] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0_#1A1A1A] transition-all mb-4"
           >
             <ArrowLeft size={18} strokeWidth={3} />
@@ -202,11 +253,13 @@ export default function TunagrahitaLayout({ lesson, tema, mode }: Props) {
         </div>
       </header>
 
-      <div className="px-6 max-w-[600px] mx-auto mb-4">
-        <div className="bg-white rounded-[20px] border-2 border-[#1A1A1A] p-4 shadow-[2px_2px_0_#1A1A1A]">
-          <StarProgress current={stars} total={totalActivities} />
+      {ENABLE_ACTIVITIES && (
+        <div className="px-6 max-w-[600px] mx-auto mb-4">
+          <div className="bg-white rounded-[20px] border-2 border-[#1A1A1A] p-4 shadow-[2px_2px_0_#1A1A1A]">
+            <StarProgress current={stars} total={totalActivities} />
+          </div>
         </div>
-      </div>
+      )}
 
       <div className="px-6 py-2  max-w-[600px] mx-auto space-y-5">
         <div className="flex items-center justify-between">
@@ -216,111 +269,18 @@ export default function TunagrahitaLayout({ lesson, tema, mode }: Props) {
           <div className="flex-1 mx-4 h-4 bg-[#F8F9FA] rounded-full overflow-hidden border-2 border-[#1A1A1A]">
             <motion.div
               animate={{ width: `${((currentStep + 1) / totalSteps) * 100}%` }}
-              transition={prefersReducedMotion ? { duration: 0.1 } : { type: "spring", stiffness: 100 }}
+              transition={
+                prefersReducedMotion
+                  ? { duration: 0.1 }
+                  : { type: "spring", stiffness: 100 }
+              }
               className="h-full bg-[#FFD700] rounded-full"
             />
           </div>
         </div>
 
         <AnimatePresence mode="wait">
-          {!showActivity ? (
-            <motion.div
-              key={`step-${currentStep}`}
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -30 }}
-              className="space-y-5"
-            >
-              <div className="bg-white rounded-[32px] border-2 border-[#1A1A1A] p-8 text-center shadow-[4px_4px_0_#1A1A1A]">
-                <motion.div
-                  key={step.emoji}
-                  initial={prefersReducedMotion ? { opacity: 0 } : { scale: 0, rotate: -180 }}
-                  animate={prefersReducedMotion ? { opacity: 1 } : { scale: 1, rotate: 0 }}
-                  transition={prefersReducedMotion ? { duration: 0.1 } : { type: "spring", stiffness: 200 }}
-                  className="text-8xl md:text-9xl mb-5"
-                >
-                  {step.emoji} 
-                </motion.div>
-
-                <h2 className="text-3xl md:text-4xl font-black text-[#1A1A1A] leading-tight">
-                  {step.textSimple}
-                </h2>
-              </div>
-
-              {step.videoClipUrl && (
-                <div className="bg-white rounded-[28px] border-2 border-[#1A1A1A] p-4 shadow-[2px_2px_0_#1A1A1A]">
-                  <div className="relative bg-[#1A2835] rounded-[20px] overflow-hidden aspect-video border-2 border-[#1A1A1A]">
-                    <video
-                      ref={videoRef}
-                      className="w-full h-full object-cover cursor-pointer"
-                      playsInline
-                      onPlay={() => setIsPlaying(true)}
-                      onPause={() => setIsPlaying(false)}
-                      onClick={toggleVideo}
-                    >
-                      <source src={step.videoClipUrl} type="video/mp4" />
-                    </video>
-
-                    <button
-                      onClick={toggleVideo}
-                      className={`absolute inset-0 flex items-center justify-center transition-colors duration-300 ${
-                        isPlaying
-                          ? "bg-transparent"
-                          : "bg-black/20 hover:bg-black/30"
-                      }`}
-                    >
-                      <motion.div
-                        whileTap={prefersReducedMotion ? {} : { scale: 0.9 }}
-                        className={`w-20 h-20 md:w-24 md:h-24 bg-[#FFD700] rounded-full flex items-center justify-center border-2 border-[#1A1A1A] shadow-[3px_3px_0_#1A1A1A] transition-all duration-300 ${
-                          isPlaying
-                            ? "opacity-0 scale-75 pointer-events-none"
-                            : prefersReducedMotion 
-                              ? "opacity-100" 
-                              : "opacity-100 scale-100"
-                        }`}
-                      >
-                        {isPlaying ? (
-                          <Pause size={36} className="text-[#1A1A1A]" />
-                        ) : (
-                          <Play size={36} className="text-[#1A1A1A] ml-1" />
-                        )}
-                      </motion.div>
-                    </button>
-                  </div>
-
-                  <div className="mt-4">
-                    <SpeedControl
-                      speed={videoSpeed}
-                      onSpeedChange={setVideoSpeed}
-                    />
-                  </div>
-                </div>
-              )}
-
-              <AudioNarrator
-                text={step.audioNarration}
-                autoPlay
-                shouldStop={isPlaying}
-              />
-
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.97 }}
-                onClick={goNext}
-                className="w-full py-6 bg-[#FFD700] text-[#1A1A1A] rounded-[24px] font-black text-xl border-2 border-[#1A1A1A] shadow-[4px_4px_0_#1A1A1A] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_#1A1A1A] transition-all flex items-center justify-center gap-3"
-              >
-                {hasActivity ? (
-                  <>🎮 Main Game!</>
-                ) : currentStep === totalSteps - 1 ? (
-                  <>✅ Selesai!</>
-                ) : (
-                  <>
-                    Lanjut <ChevronRight size={28} />
-                  </>
-                )}
-              </motion.button>
-            </motion.div>
-          ) : (
+          {showActivity ? (
             <motion.div
               key="activity"
               initial={{ opacity: 0, scale: 0.95 }}
@@ -334,8 +294,115 @@ export default function TunagrahitaLayout({ lesson, tema, mode }: Props) {
                 />
               )}
             </motion.div>
+          ) : (
+            <motion.div
+              key={`step-${currentStep}`}
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -30 }}
+              className="space-y-5"
+            >
+              <div className="bg-white rounded-[32px] border-2 border-[#1A1A1A] p-8 text-center shadow-[4px_4px_0_#1A1A1A]">
+                <motion.div
+                  key={step.emoji}
+                  initial={
+                    prefersReducedMotion
+                      ? { opacity: 0 }
+                      : { scale: 0, rotate: -180 }
+                  }
+                  animate={
+                    prefersReducedMotion
+                      ? { opacity: 1 }
+                      : { scale: 1, rotate: 0 }
+                  }
+                  transition={
+                    prefersReducedMotion
+                      ? { duration: 0.1 }
+                      : { type: "spring", stiffness: 200 }
+                  }
+                  className="text-8xl md:text-9xl mb-5"
+                >
+                  {step.emoji}
+                </motion.div>
+
+                <h2 className="text-3xl md:text-4xl font-black text-[#1A1A1A] leading-tight">
+                  {step.textSimple}
+                </h2>
+              </div>
+            </motion.div>
           )}
         </AnimatePresence>
+
+        {/* Stable Video Player & Lanjut Button */}
+        {!showActivity && (
+          <div className="space-y-5">
+            {step.videoClipUrl && (
+              <div className="bg-white rounded-[28px] border-2 border-[#1A1A1A] p-4 shadow-[2px_2px_0_#1A1A1A]">
+                <div className="relative bg-[#1A2835] rounded-[20px] overflow-hidden aspect-video border-2 border-[#1A1A1A]">
+                  <video
+                    ref={videoRef}
+                    className="w-full h-full object-cover cursor-pointer"
+                    playsInline
+                    onPlay={() => setIsPlaying(true)}
+                    onPause={() => setIsPlaying(false)}
+                    onClick={toggleVideo}
+                    onLoadedMetadata={handleVideoLoad}
+                  />
+
+                  <button
+                    onClick={toggleVideo}
+                    className={`absolute inset-0 flex items-center justify-center transition-colors duration-300 ${
+                      isPlaying
+                        ? "bg-transparent"
+                        : "bg-black/20 hover:bg-black/30"
+                    }`}
+                  >
+                    <motion.div
+                      whileTap={prefersReducedMotion ? {} : { scale: 0.9 }}
+                      className={`w-20 h-20 md:w-24 md:h-24 bg-[#FFD700] rounded-full flex items-center justify-center border-2 border-[#1A1A1A] shadow-[3px_3px_0_#1A1A1A] transition-all duration-300 ${
+                        isPlaying
+                          ? "opacity-0 scale-75 pointer-events-none"
+                          : prefersReducedMotion
+                            ? "opacity-100"
+                            : "opacity-100 scale-100"
+                      }`}
+                    >
+                      {isPlaying ? (
+                        <Pause size={36} className="text-[#1A1A1A]" />
+                      ) : (
+                        <Play size={36} className="text-[#1A1A1A] ml-1" />
+                      )}
+                    </motion.div>
+                  </button>
+                </div>
+
+                <div className="mt-4">
+                  <SpeedControl
+                    speed={videoSpeed}
+                    onSpeedChange={setVideoSpeed}
+                  />
+                </div>
+              </div>
+            )}
+
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.97 }}
+              onClick={goNext}
+              className="w-full py-6 bg-[#FFD700] text-[#1A1A1A] rounded-[24px] font-black text-xl border-2 border-[#1A1A1A] shadow-[4px_4px_0_#1A1A1A] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_#1A1A1A] transition-all flex items-center justify-center gap-3"
+            >
+              {hasActivity ? (
+                <>🎮 Main Game!</>
+              ) : currentStep === totalSteps - 1 ? (
+                <>✅ Selesai!</>
+              ) : (
+                <>
+                  Lanjut <ChevronRight size={28} />
+                </>
+              )}
+            </motion.button>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -17,6 +17,7 @@ function LearnPageContent() {
     | "ceria";
 
   const modeInfo = MODE_LIST.find((m) => m.id === mode);
+  const isLocked = searchParams.get("locked") === "true";
   
   const [totalStars, setTotalStars] = useState(0);
   const [starsMap, setStarsMap] = useState<Record<string, number>>({});
@@ -42,7 +43,11 @@ function LearnPageContent() {
   const handleSelectTema = (tema: string) => {
     playSFX("click");
     triggerHaptic("click");
-    router.push(`/learn/${tema}/${mode}`);
+    if (isLocked) {
+      router.push(`/learn/${tema}/${mode}?locked=true`);
+    } else {
+      router.push(`/learn/${tema}/${mode}`);
+    }
   };
 
   return (
@@ -56,7 +61,7 @@ function LearnPageContent() {
         <div className="flex-1 p-8 md:p-14 relative flex flex-col justify-between bg-white z-0">
           <div>
             <Link
-              href="/menu"
+              href={isLocked ? "/" : "/menu"}
               onClick={() => {
                 playSFX("back");
                 triggerHaptic("back");
@@ -64,7 +69,7 @@ function LearnPageContent() {
               className="inline-flex items-center gap-2 text-sm font-bold text-[#6B7280] hover:text-[#1A1A1A] px-4 py-2 rounded-full border-2 border-[#1A1A1A] bg-[#F8F9FA] shadow-[2px_2px_0_#1A1A1A] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0_#1A1A1A] transition-all mb-12"
             >
               <ArrowLeft size={16} strokeWidth={2.5} />
-              Tutup Buku (Kembali)
+              {isLocked ? "Kembali ke Beranda" : "Tutup Buku (Kembali)"}
             </Link>
 
             <div className="space-y-6 mt-4">

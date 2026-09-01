@@ -69,7 +69,7 @@ export default function BeliPage() {
                   <div className="bg-[#FFD700] w-10 h-10 rounded-[12px] flex items-center justify-center border-2 border-[#1A1A1A] shadow-[1px_1px_0_#1A1A1A] shrink-0">
                     <Smartphone size={18} className="text-[#1A1A1A]" />
                   </div>
-                  <span className="text-sm font-bold text-[#1A1A1A]">Akses Digital<br/><span className="text-xs font-medium text-[#6B7280]">QR Code App</span></span>
+                  <span className="text-sm font-bold text-[#1A1A1A]">Akses Digital<br/><span className="text-xs font-medium text-[#6B7280]">Web Portal</span></span>
                 </div>
               </div>
             </div>
@@ -85,7 +85,7 @@ export default function BeliPage() {
               
               <div className="flex flex-col gap-3 w-full md:w-auto">
                 <a
-                  href="https://wa.me/6285123456789"
+                  href="https://wa.me/62895352977785?text=Halo%20CareLife%2C%20saya%20tertarik%20untuk%20memesan%20buku%20fisik%20CareLife."
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center justify-center gap-2 w-full md:w-auto bg-[#66B2B2] hover:bg-[#5AA3A3] text-white px-8 py-4 rounded-[20px] font-bold text-sm border-2 border-[#1A1A1A] shadow-[4px_4px_0_#1A1A1A] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_#1A1A1A] transition-all"
@@ -182,7 +182,7 @@ export default function BeliPage() {
             <div className="bg-[#F8F9FA] p-6 rounded-[20px] border-2 border-[#1A1A1A] shadow-[2px_2px_0_#1A1A1A]">
               <h3 className="font-bold text-base text-[#1A1A1A] mb-2">Apa saja isi dalam paket?</h3>
               <p className="text-sm font-medium text-[#6B7280] leading-relaxed">
-                Paket CareLife 4-in-1 berisi 4 versi buku fisik dan modul digital untuk berbagai kebutuhan, lengkap dengan kode QR akses aplikasi.
+                Paket CareLife 4-in-1 berisi 4 versi buku fisik dan modul digital untuk berbagai kebutuhan, lengkap dengan akses portal web.
               </p>
             </div>
             <div className="bg-[#F8F9FA] p-6 rounded-[20px] border-2 border-[#1A1A1A] shadow-[2px_2px_0_#1A1A1A]">

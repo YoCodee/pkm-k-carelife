@@ -73,19 +73,28 @@ export default function SplashScreen({ onFinish }: { onFinish: () => void }) {
         }}
       />
 
-      <h1
-        className={`relative z-10 text-[40px] font-black tracking-tight transition-all duration-700 ease-out ${
+      <div
+        className={`relative z-10 flex flex-col items-center gap-4 transition-all duration-700 ease-out ${
           fadeOut
             ? "scale-110 opacity-0"
             : textVisible
               ? "scale-100 opacity-100 translate-y-0"
               : "scale-95 opacity-0 translate-y-3"
         }`}
-        style={{ fontFamily: "'Nunito', sans-serif" }}
       >
-        <span className="text-[#1A1A1A]">Care</span>
-        <span className="text-[#66B2B2]">Life</span>
-      </h1>
+        <img
+          src="/logo-carelife.png"
+          alt="CareLife Logo"
+          className="w-28 h-28 object-contain border-4 border-[#1A1A1A] p-2.5 rounded-[28px] bg-white shadow-[4px_4px_0_#1A1A1A]"
+        />
+        <h1
+          className="text-[40px] font-black tracking-tight"
+          style={{ fontFamily: "'Nunito', sans-serif" }}
+        >
+          <span className="text-[#1A1A1A]">Care</span>
+          <span className="text-[#66B2B2]">Life</span>
+        </h1>
+      </div>
     </div>
   );
 }

@@ -1,44 +1,117 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { Volume2, VolumeX } from "lucide-react";
 import { motion } from "framer-motion";
 import { useSpeechSynthesisSSR } from "@/lib/hooks/useSpeechSynthesisSSR";
 
 interface AudioNarratorProps {
   text: string;
+  audioUrl?: string; // Berkas audio rekaman asli (opsional)
   autoPlay?: boolean;
   onEnd?: () => void;
   shouldStop?: boolean; // Menghentikan narasi jika kondisi tertentu terpenuhi di luar (misalnya video diputar)
 }
 
-export default function AudioNarrator({ text, autoPlay = false, onEnd, shouldStop = false }: AudioNarratorProps) {
-  const { isSpeaking, speak, stop } = useSpeechSynthesisSSR();
+export default function AudioNarrator({
+  text,
+  audioUrl,
+  autoPlay = false,
+  onEnd,
+  shouldStop = false,
+}: AudioNarratorProps) {
+  const { isSpeaking: isSpeakingTTS, speak: speakTTS, stop: stopTTS } = useSpeechSynthesisSSR();
+  const [isFileSpeaking, setIsFileSpeaking] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  // Inisialisasi dan bersihkan objek audio saat audioUrl berubah
+  useEffect(() => {
+    if (audioUrl) {
+      const audio = new Audio(audioUrl);
+      audioRef.current = audio;
+
+      audio.onplay = () => setIsFileSpeaking(true);
+      audio.onpause = () => setIsFileSpeaking(false);
+      audio.onended = () => {
+        setIsFileSpeaking(false);
+        onEnd?.();
+      };
+      audio.onerror = () => {
+        setIsFileSpeaking(false);
+      };
+
+      return () => {
+        audio.pause();
+        audio.src = "";
+        audioRef.current = null;
+        setIsFileSpeaking(false);
+      };
+    }
+  }, [audioUrl, onEnd]);
+
+  const isSpeaking = audioUrl ? isFileSpeaking : isSpeakingTTS;
+
+  const stopAll = useCallback(() => {
+    if (audioUrl) {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+      }
+      setIsFileSpeaking(false);
+    } else {
+      stopTTS();
+    }
+  }, [audioUrl, stopTTS]);
+
+  const speakAll = useCallback(() => {
+    if (audioUrl) {
+      if (audioRef.current) {
+        audioRef.current.currentTime = 0;
+        audioRef.current.play().catch((err) => {
+          console.error("Audio playback failed:", err);
+        });
+      }
+    } else {
+      speakTTS(text, 0.9, 1.1, onEnd);
+    }
+  }, [audioUrl, text, onEnd, speakTTS]);
 
   // Hentikan suara jika shouldStop bernilai true
   useEffect(() => {
     if (shouldStop && isSpeaking) {
-      stop();
+      stopAll();
     }
-  }, [shouldStop, isSpeaking, stop]);
+  }, [shouldStop, isSpeaking, stopAll]);
 
   useEffect(() => {
-    if (autoPlay && text && !shouldStop) {
-      // Perkecil jeda waktu menjadi 100ms agar dideteksi sebagai bagian dari klik user di HP
-      const timeout = setTimeout(() => speak(text, 0.9, 1.1, onEnd), 100);
+    if (autoPlay && (audioUrl || text) && !shouldStop) {
+      const playAudio = () => {
+        if (audioUrl) {
+          if (audioRef.current) {
+            audioRef.current.currentTime = 0;
+            audioRef.current.play().catch((err) => {
+              console.error("AutoPlay failed:", err);
+            });
+          }
+        } else {
+          speakTTS(text, 0.9, 1.1, onEnd);
+        }
+      };
+
+      const timeout = setTimeout(playAudio, 100);
       return () => {
         clearTimeout(timeout);
-        stop();
+        stopAll();
       };
     }
-    return () => stop();
-  }, [text, autoPlay, speak, stop, shouldStop, onEnd]);
+    return () => stopAll();
+  }, [text, audioUrl, autoPlay, speakTTS, stopAll, shouldStop, onEnd]);
 
   const handleToggle = () => {
     if (isSpeaking) {
-      stop();
+      stopAll();
     } else {
-      speak(text, 0.9, 1.1, onEnd);
+      speakAll();
     }
   };
 

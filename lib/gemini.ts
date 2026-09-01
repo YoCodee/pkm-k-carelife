@@ -40,7 +40,7 @@ export const STATIC_QA: Record<string, string> = {
     "2. **Visual Step-by-Step** — Tempel poster langkah-langkah (misalnya: buka keran → basahi tangan → pakai sabun → gosok → bilas → keringkan) di dekat wastafel.\n\n" +
     "3. **Praktik Langsung** — Dampingi anak melakukan sendiri, bukan hanya menjelaskan. Gunakan metode 'hand-over-hand' (pegang tangan anak untuk membimbing gerakan).\n\n" +
     "4. **Pujian & Reward** — Berikan pujian setiap kali anak berhasil. Bisa juga pakai stiker reward chart untuk motivasi.\n\n" +
-    "5. **Buku CareLife** — Di buku CareLife tema 'Merawat Diri', ada video visual langkah demi langkah yang bisa diakses via QR Code. Sangat membantu!\n\n" +
+    "5. **Buku CareLife** — Di buku CareLife tema 'Merawat Diri', ada video visual langkah demi langkah yang bisa diakses via web portal. Sangat membantu!\n\n" +
     "Ingat, kesabaran adalah kunci. Setiap anak punya kecepatan belajar yang berbeda 💛",
 
   "Apa saja tanda-tanda bullying pada anak tunarungu?":
@@ -84,8 +84,8 @@ export const STATIC_QA: Record<string, string> = {
     "- Buku Visual → untuk tunagrahita\n" +
     "- Buku Braille → untuk tunanetra\n" +
     "- Buku Bahasa Isyarat → untuk tunarungu\n\n" +
-    "📱 **Langkah 2: Scan QR Code**\n" +
-    "Di setiap halaman buku ada QR Code. Scan dengan kamera HP untuk membuka konten digital di platform CareLife.\n\n" +
+    "📱 **Langkah 2: Buka Portal Web**\n" +
+    "Masuk ke menu 'Belajar' di platform digital CareLife untuk membuka konten digital yang sesuai dengan materi buku.\n\n" +
     "🎬 **Langkah 3: Pilih Mode Belajar**\n" +
     "Di platform digital, pilih mode yang sesuai:\n" +
     "- 👁️ Dunia Visual — teks besar & gambar jelas\n" +

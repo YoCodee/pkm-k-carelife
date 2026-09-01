@@ -5,11 +5,21 @@ import { useState, useEffect, useRef, useCallback } from "react";
 export function useSpeechSynthesisSSR() {
   const [isSupported, setIsSupported] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
 
   useEffect(() => {
     if (typeof window !== "undefined" && "speechSynthesis" in window) {
       setIsSupported(true);
+      
+      const updateVoices = () => {
+        setVoices(window.speechSynthesis.getVoices());
+      };
+      
+      updateVoices();
+      if (window.speechSynthesis.onvoiceschanged !== undefined) {
+        window.speechSynthesis.onvoiceschanged = updateVoices;
+      }
     }
   }, []);
 
@@ -34,8 +44,8 @@ export function useSpeechSynthesisSSR() {
       utterance.pitch = pitch;
 
       // Find available Indonesian voice
-      const voices = window.speechSynthesis.getVoices();
-      const idVoices = voices.filter(
+      const currentVoices = voices.length > 0 ? voices : window.speechSynthesis.getVoices();
+      const idVoices = currentVoices.filter(
         (v) =>
           v.lang.toLowerCase().startsWith("id") ||
           v.lang.toLowerCase() === "id-id"
@@ -62,14 +72,20 @@ export function useSpeechSynthesisSSR() {
         utteranceRef.current = null;
         onEnd?.();
       };
-      utterance.onerror = () => {
+      utterance.onerror = (e) => {
+        // "interrupted" and "canceled" are standard events fired when speechSynthesis.cancel() is called
+        // to stop or transition speech, and are not actual runtime errors.
+        if (e.error !== "interrupted" && e.error !== "canceled") {
+          console.error("SpeechSynthesis error:", e);
+        }
         setIsSpeaking(false);
         utteranceRef.current = null;
+        onEnd?.(); // Ensure fallback is called to prevent layout hang!
       };
 
       window.speechSynthesis.speak(utterance);
     },
-    []
+    [voices]
   );
 
   // Auto clean up when hook unmounts
