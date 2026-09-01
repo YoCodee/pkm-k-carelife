@@ -9,7 +9,7 @@ export default function HeroSection() {
       <div className="max-w-4xl mx-auto text-center">
         <div className="text-5xl md:text-7xl font-bold mb-6 flex justify-center items-center space-x-4">
           <span>💚</span>
-          <span>CareLife</span>
+          <span>CareLife Updated</span>
         </div>
 
         <h1 className="text-3xl md:text-4xl font-bold mb-6">
