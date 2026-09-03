@@ -35,6 +35,7 @@ const BOOKS = [
       "100+ ilustrasi isyarat",
       "Latihan interaktif via QR",
     ],
+    isPremium: false,
   },
   {
     id: "tunagrahita",
@@ -51,6 +52,7 @@ const BOOKS = [
       "Gambar berwarna cerah",
       "Panduan orang tua & guru",
     ],
+    isPremium: false,
   },
   {
     id: "tunanetra",
