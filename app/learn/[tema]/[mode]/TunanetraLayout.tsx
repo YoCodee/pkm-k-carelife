@@ -380,8 +380,8 @@ export default function TunanetraLayout({ lesson, tema, mode, isLocked = false }
 
   return (
     <div
-      className="min-h-screen bg-[#F8F9FA] text-[#1A1A1A] select-none flex flex-col"
-      style={{ touchAction: "none" }}
+      className="min-h-screen bg-[#F8F9FA] text-[#1A1A1A] select-none flex flex-col overflow-y-auto"
+      style={{ touchAction: "pan-y" }}
       onPointerDown={handlePointerDown}
       onPointerUp={handlePointerUp}
       role="application"

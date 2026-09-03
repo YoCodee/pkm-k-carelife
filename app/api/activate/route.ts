@@ -10,10 +10,26 @@ const redis = new Redis({
   token: process.env.UPSTASH_REDIS_REST_TOKEN!,
 });
 
+/**
+ * Demo / development codes — bisa dipakai berulang kali, tidak dicek Redis.
+ * Jangan dicetak di buku produksi.
+ */
+const DEMO_CODES = new Set(["CL-0101"]);
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const code: string = (body.code ?? "").toString().toUpperCase().trim();
+
+    // ── DEMO / DEV shortcut ──────────────────────────────────────────────────
+    // Kode demo selalu berhasil, bisa dipakai berkali-kali, tidak menyentuh Redis.
+    if (DEMO_CODES.has(code)) {
+      return NextResponse.json(
+        { success: true, demo: true },
+        { status: 200 }
+      );
+    }
+    // ────────────────────────────────────────────────────────────────────────
 
     // 1. Validasi format & checksum lokal (cepat, tanpa hit DB)
     if (!isValidActivationCode(code)) {
